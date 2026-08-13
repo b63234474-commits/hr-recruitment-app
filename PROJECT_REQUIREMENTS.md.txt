@@ -1,0 +1,803 @@
+# HR Recruitment Management System
+
+Build a complete internal company HR Recruitment / Applicant Tracking System.
+
+This is an internal company application.
+
+IMPORTANT:
+- Do NOT create company registration.
+- Do NOT create multi-company registration.
+- Do NOT create subscription/payment plans.
+- Do NOT create public candidate accounts.
+- Candidates do not need to register.
+- Only internal HR/recruitment users access the application.
+- Use MERN stack.
+- Frontend: React + Vite.
+- Backend: Node.js + Express.
+- Database: MongoDB.
+- MongoDB can be managed using MongoDB Compass.
+
+# TECHNOLOGY
+
+Frontend:
+- React
+- Vite
+- JavaScript
+- React Router DOM
+- Axios
+- Bootstrap
+- Bootstrap Icons
+
+Backend:
+- Node.js
+- Express
+- MongoDB
+- Mongoose
+- REST API
+- JWT authentication
+- Multer for resume uploads
+- Nodemailer for email
+- PDFKit for offer letters
+
+# APPLICATION PURPOSE
+
+The application must manage the complete recruitment lifecycle:
+
+HR Login
+→ Dashboard
+→ Create Job
+→ Create Job Description
+→ Upload Candidate Resume
+→ Parse Resume
+→ Candidate Profile
+→ JD vs Resume Matching
+→ Suitable / Review / Not Suitable
+→ Screening
+→ Shortlisting
+→ Assessment
+→ Interview Scheduling
+→ Interview
+→ Interview Feedback
+→ Selection
+→ Offer Letter
+→ Offer Accepted
+→ Hired
+→ Employee Onboarding
+
+# USER ROLES
+
+Create internal users:
+
+1. Admin
+2. HR
+3. Recruiter
+4. Hiring Manager
+5. Interviewer
+
+No public registration.
+
+Admin can create internal users.
+
+# DASHBOARD
+
+Show:
+
+- Total Jobs
+- Active Jobs
+- Closed Jobs
+- Total Candidates
+- New Candidates
+- Shortlisted Candidates
+- Interviews Scheduled
+- Interviews Completed
+- Offers Sent
+- Offers Accepted
+- Hired
+- Rejected
+
+Also show:
+
+- Candidate pipeline
+- Upcoming interviews
+- Recent candidates
+- Recent jobs
+- Hiring statistics
+
+# JOB MANAGEMENT
+
+HR can:
+
+- Create job
+- Edit job
+- View job
+- Delete job
+- Close job
+- Reopen job
+- Search jobs
+- Filter jobs
+
+Job fields:
+
+- jobId
+- jobTitle
+- department
+- location
+- employmentType
+- minimumExperience
+- maximumExperience
+- salaryRange
+- requiredSkills
+- preferredSkills
+- education
+- responsibilities
+- qualifications
+- jobDescription
+- numberOfOpenings
+- recruiter
+- hiringManager
+- status
+- createdAt
+- closingDate
+
+Job status:
+
+- Draft
+- Active
+- Paused
+- Closed
+
+# CANDIDATE MANAGEMENT
+
+Candidate fields:
+
+- candidateId
+- firstName
+- lastName
+- email
+- phone
+- location
+- experience
+- currentCompany
+- currentDesignation
+- skills
+- education
+- certifications
+- resume
+- resumeUrl
+- linkedinUrl
+- portfolioUrl
+- source
+- recruiter
+- createdAt
+- updatedAt
+
+Candidate sources:
+
+- LinkedIn
+- Indeed
+- Naukri
+- Referral
+- Company Website
+- Email
+- Recruiter Sourcing
+- Walk-in
+- Other
+
+# RESUME UPLOAD
+
+Support:
+
+- PDF
+- DOC
+- DOCX
+
+HR can upload a resume.
+
+After upload:
+
+Resume
+→ Parse resume
+→ Extract information
+→ Create candidate
+→ Match candidate against selected job
+
+Allow HR to manually edit extracted information.
+
+# RESUME PARSING
+
+Extract where possible:
+
+- Name
+- Email
+- Phone
+- Skills
+- Education
+- Experience
+- Current company
+- Current designation
+- Location
+- Certifications
+- Projects
+
+Never invent missing information.
+
+# JD RESUME MATCHING
+
+Compare candidate with selected job.
+
+Compare:
+
+- Experience
+- Required skills
+- Preferred skills
+- Education
+- Job title
+- Location
+- Certifications
+
+Generate:
+
+matchScore: 0-100
+
+Show:
+
+MATCH SCORE
+Matching Skills
+Missing Skills
+Experience Match
+Education Match
+
+Classification:
+
+- Suitable
+- Review Required
+- Not Suitable
+
+IMPORTANT:
+The score is only recruiter assistance.
+Never automatically reject a candidate only because of the score.
+HR makes the final decision.
+
+# FILTERING
+
+Candidate filters:
+
+- Job
+- Experience
+- Skills
+- Location
+- Education
+- Match score
+- Candidate status
+- Source
+- Applied date
+- Salary expectation
+
+Example:
+
+Experience 2-5 years
+AND React
+AND JavaScript
+AND matchScore > 70
+
+# CANDIDATE PROFILE
+
+Create detailed profile.
+
+Sections:
+
+Personal Information
+Professional Information
+Resume
+Job Application
+Matching
+Recruitment Timeline
+Notes
+Communication History
+
+Timeline:
+
+Applied
+→ Screening
+→ Shortlisted
+→ Assessment
+→ Interview Scheduled
+→ Interview Completed
+→ Selected
+→ Offer Sent
+→ Offer Accepted
+→ Hired
+
+# RECRUITMENT PIPELINE
+
+Create Kanban board:
+
+New
+Screening
+Shortlisted
+Assessment
+Interview Scheduled
+Interview Completed
+Selected
+Offer Sent
+Offer Accepted
+Hired
+Rejected
+
+Allow authorized HR users to change stages.
+
+Record every stage change.
+
+# SCREENING
+
+Screening fields:
+
+- Relevant experience
+- Required skills
+- Communication
+- Notice period
+- Salary expectation
+- Location
+- Recruiter notes
+- Screening result
+
+Actions:
+
+- Shortlist
+- Reject
+- Move to Assessment
+- Move to Interview
+
+# ASSESSMENT
+
+Assessment fields:
+
+- Assessment name
+- Candidate
+- Job
+- Questions
+- Score
+- Maximum score
+- Result
+- Evaluator
+- Date
+- Comments
+
+Results:
+
+- Passed
+- Failed
+- Pending
+
+# INTERVIEWS
+
+Interview fields:
+
+- Candidate
+- Job
+- Interview type
+- Interviewer
+- Date
+- Start time
+- End time
+- Meeting link
+- Location
+- Notes
+
+Interview types:
+
+- HR Interview
+- Technical Interview
+- Manager Interview
+- Final Interview
+
+Statuses:
+
+- Scheduled
+- Completed
+- Cancelled
+- Rescheduled
+- No Show
+
+# INTERVIEW FEEDBACK
+
+After interview:
+
+- Technical Skills
+- Communication
+- Problem Solving
+- Experience
+- Team Fit
+- Overall Rating
+- Strengths
+- Weaknesses
+- Comments
+- Recommendation
+
+Recommendation:
+
+- Strong Hire
+- Hire
+- Hold
+- Reject
+
+# OFFER MANAGEMENT
+
+When candidate is selected:
+
+Create offer.
+
+Fields:
+
+- Candidate
+- Job
+- Joining Date
+- Salary
+- Benefits
+- Employment Type
+- Location
+- Reporting Manager
+- Offer Expiry Date
+
+Statuses:
+
+- Draft
+- Sent
+- Viewed
+- Accepted
+- Declined
+- Expired
+
+Actions:
+
+- Preview
+- Generate PDF
+- Download
+- Send email
+
+# EMAIL
+
+Create templates:
+
+- Application Received
+- Shortlisted
+- Interview Invitation
+- Interview Reminder
+- Assessment Invitation
+- Selected
+- Offer Letter
+- Rejection
+- Follow Up
+
+Store communication history.
+
+For development, if SMTP is not configured, create a mock email service.
+
+Never expose email credentials in frontend.
+
+# EMPLOYEE
+
+When offer is accepted:
+
+Candidate
+→ Employee
+
+Create employee record:
+
+- employeeId
+- candidateId
+- name
+- email
+- phone
+- department
+- designation
+- joiningDate
+- manager
+- employmentType
+- hiredJob
+- onboardingStatus
+
+Onboarding:
+
+- Pending
+- Documents Pending
+- In Progress
+- Completed
+
+# DATABASE
+
+Collections:
+
+users
+jobs
+candidates
+applications
+resumes
+assessments
+interviews
+interviewFeedback
+offers
+employees
+communications
+activityLogs
+
+# API
+
+Jobs:
+
+POST /api/jobs
+GET /api/jobs
+GET /api/jobs/:id
+PUT /api/jobs/:id
+DELETE /api/jobs/:id
+
+Candidates:
+
+POST /api/candidates
+GET /api/candidates
+GET /api/candidates/:id
+PUT /api/candidates/:id
+DELETE /api/candidates/:id
+
+Resume:
+
+POST /api/resumes/upload
+
+Matching:
+
+POST /api/candidates/:id/match/:jobId
+
+Applications:
+
+POST /api/applications
+GET /api/applications
+PUT /api/applications/:id/status
+
+Assessments:
+
+POST /api/assessments
+GET /api/assessments
+PUT /api/assessments/:id
+
+Interviews:
+
+POST /api/interviews
+GET /api/interviews
+PUT /api/interviews/:id
+DELETE /api/interviews/:id
+
+Interview Feedback:
+
+POST /api/interviews/:id/feedback
+
+Offers:
+
+POST /api/offers
+GET /api/offers
+PUT /api/offers/:id/status
+
+Employees:
+
+POST /api/employees
+GET /api/employees
+GET /api/employees/:id
+
+Communications:
+
+POST /api/communications
+GET /api/communications/:candidateId
+
+Dashboard:
+
+GET /api/dashboard/stats
+
+# FRONTEND ROUTES
+
+/dashboard
+
+/jobs
+/jobs/create
+/jobs/:id
+
+/candidates
+/candidates/upload
+/candidates/:id
+
+/pipeline
+
+/assessments
+
+/interviews
+
+/offers
+
+/employees
+
+/reports
+
+/settings
+
+# SIDEBAR
+
+Dashboard
+Jobs
+Candidates
+Pipeline
+Assessments
+Interviews
+Offers
+Employees
+Reports
+Settings
+
+# DESIGN
+
+Create a professional HR/ATS interface.
+
+Use:
+
+- Bootstrap
+- Bootstrap Icons
+- Responsive layout
+- Sidebar
+- Header
+- Cards
+- Tables
+- Forms
+- Modal dialogs
+- Badges
+- Tabs
+- Kanban board
+- Pagination
+- Search
+- Filters
+- Loading states
+- Empty states
+- Error messages
+- Success notifications
+
+Avoid excessive animations.
+
+# SECURITY
+
+Use:
+
+- JWT
+- Password hashing
+- Role-based authorization
+- Environment variables
+- Input validation
+- File validation
+- File size validation
+- Secure API design
+- CORS
+
+# SAMPLE DATA
+
+Create sample jobs:
+
+Frontend Developer
+Experience: 2-4 years
+Skills: React, JavaScript, HTML, CSS, Git
+
+MERN Stack Developer
+Experience: 2-5 years
+Skills: React, Node.js, Express, MongoDB
+
+Backend Developer
+Experience: 2-5 years
+Skills: Node.js, Express, MongoDB, REST API
+
+Create 10 sample candidates with different:
+
+- Experience
+- Skills
+- Education
+- Locations
+- Sources
+- Match scores
+- Recruitment stages
+
+# IMPORTANT DEVELOPMENT RULES
+
+Do NOT create fake buttons.
+
+Every major button must work.
+
+Every form must connect to an API.
+
+Every API must connect to MongoDB.
+
+Do not hardcode candidate/job data in React.
+
+Use MongoDB for persistent data.
+
+Use reusable components.
+
+Use proper error handling.
+
+Use loading states.
+
+Use validation.
+
+Do not put backend code inside frontend.
+
+Do not put MongoDB credentials in frontend.
+
+Do not put secret keys in frontend.
+
+Before creating a new file, check whether an appropriate file already exists.
+
+Reuse existing components instead of duplicating code.
+
+Do not overwrite working functionality unnecessarily.
+
+After every module, test the API and frontend connection.
+
+# DEVELOPMENT ORDER
+
+Build the application in this exact order:
+
+PHASE 1
+Project structure
+MongoDB connection
+Express server
+Environment variables
+Base API
+Error handling
+
+PHASE 2
+Authentication
+Users
+Roles
+JWT
+
+PHASE 3
+Jobs
+Job CRUD
+JD management
+
+PHASE 4
+Candidates
+Candidate CRUD
+Resume upload
+Resume parsing
+
+PHASE 5
+JD Resume matching
+Match score
+Candidate filtering
+
+PHASE 6
+Recruitment pipeline
+
+PHASE 7
+Assessments
+
+PHASE 8
+Interviews
+Scheduling
+Feedback
+
+PHASE 9
+Offers
+Offer PDF
+Email
+
+PHASE 10
+Employees
+Onboarding
+
+PHASE 11
+Dashboard
+Reports
+Analytics
+
+PHASE 12
+Final testing
+Bug fixing
+UI polishing
+
+Do not attempt to generate all phases in one response.
+
+Implement one phase at a time.

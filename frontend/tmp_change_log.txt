@@ -1,0 +1,1 @@
+Changed NavLink title -> data-title and added aria-label in Layout.jsx; updated index.css tooltip selectors to use data-title and styled tooltip with white background; ensured collapsed state shows only CSS tooltip and no native tooltip.

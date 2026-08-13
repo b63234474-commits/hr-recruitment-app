@@ -1,0 +1,200 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { getCandidates, deleteCandidate } from '../services/candidateService';
+import Layout from '../components/Layout';
+
+const CandidatesList = () => {
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [partnerFilter, setPartnerFilter] = useState('');
+
+  const loadCandidates = async (params = {}) => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await getCandidates(params);
+      setCandidates(response.data.data.candidates);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to load candidates');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCandidates();
+  }, []);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    await loadCandidates({
+      search,
+      status: statusFilter,
+      partner: partnerFilter,
+    });
+  };
+
+  const resetFilters = async () => {
+    setSearch('');
+    setStatusFilter('');
+    setPartnerFilter('');
+    await loadCandidates();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this candidate?')) return;
+    try {
+      await deleteCandidate(id);
+      setCandidates((prev) => prev.filter((candidate) => candidate._id !== id));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to delete candidate');
+    }
+  };
+
+  return (
+    <Layout>
+      <div>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h3 className="mb-1">Candidates</h3>
+            <p className="text-muted mb-0">Manage applicants and resumes.</p>
+          </div>
+          <Link to="/candidates/create" className="btn btn-primary">
+            <i className="bi bi-plus-lg me-2"></i>
+            Add Candidate
+          </Link>
+        </div>
+
+        <div className="card mb-4">
+          <div className="card-body">
+            <form className="row g-3" onSubmit={handleSearch}>
+              <div className="col-md-4">
+                <label className="form-label">Search Candidates</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, email, or job"
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Partner Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={partnerFilter}
+                  onChange={(e) => setPartnerFilter(e.target.value)}
+                  placeholder="Filter by partner"
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Status</label>
+                <select
+                  className="form-select"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All statuses</option>
+                  <option value="New">New</option>
+                  <option value="Screening">Screening</option>
+                  <option value="Shortlisted">Shortlisted</option>
+                  <option value="Assessment">Assessment</option>
+                  <option value="Interview Scheduled">Interview Scheduled</option>
+                  <option value="Interview Completed">Interview Completed</option>
+                  <option value="Selected">Selected</option>
+                  <option value="Offer Draft">Offer Draft</option>
+                  <option value="Offer Sent">Offer Sent</option>
+                  <option value="Offer Accepted">Offer Accepted</option>
+                  <option value="Hired">Hired</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+              <div className="col-md-12 d-flex gap-2 justify-content-end">
+                <button type="submit" className="btn btn-outline-primary">
+                  Search
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={resetFilters}>
+                  Reset
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <div className="card">
+          <div className="card-body p-0">
+            {loading ? (
+            <div className="p-4 text-center">
+              <div className="spinner-border text-primary" role="status"></div>
+            </div>
+          ) : candidates.length === 0 ? (
+            <div className="p-4 text-center text-muted">No candidates found.</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover table-sm mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Applied Role</th>
+                    <th>Status</th>
+                    <th className="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {candidates.map((candidate) => (
+                    <tr key={candidate._id} className="align-middle">
+                      <td className="align-middle">
+                        <Link to={`/candidates/${candidate._id}`} className="text-decoration-none fw-semibold">
+                          {candidate.firstName} {candidate.lastName}
+                        </Link>
+                        <div className="small text-muted">
+                          {candidate.source || 'Unknown source'} · {candidate.experience || 'Experience N/A'}
+                        </div>
+                      </td>
+                      <td className="align-middle">
+                        <div>{candidate.email || '-'}</div>
+                        <div className="small text-muted">{candidate.phone || '-'}</div>
+                      </td>
+                      <td className="align-middle">
+                        <div>{candidate.appliedJob?.jobId || '-'}</div>
+                        <div className="small text-muted">{candidate.appliedJob?.title || candidate.appliedJob?.jobTitle || ''}</div>
+                      </td>
+                      <td className="align-middle">{candidate.status || 'New'}</td>
+                      <td className="text-end align-middle">
+                        <div className="d-flex justify-content-end align-items-center gap-2">
+                          <Link to={`/candidates/${candidate._id}`} className="btn btn-sm btn-outline-primary">
+                            View
+                          </Link>
+                          <Link to={`/candidates/${candidate._id}/edit`} className="btn btn-sm btn-outline-secondary">
+                            Edit
+                          </Link>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDelete(candidate._id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+    </Layout>
+  );
+};
+
+export default CandidatesList;
