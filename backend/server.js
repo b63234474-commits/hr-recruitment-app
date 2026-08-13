@@ -7,7 +7,7 @@ const startServer = async () => {
   await connectDB();
   await seedAdmin();
 
-  const server = app.listen(env.port, () => {
+ const server = app.listen(env.port, '0.0.0.0', () => {
     console.log(`Server running in ${env.nodeEnv} mode on port ${env.port}`);
     console.log(`API URL: http://localhost:${env.port}`);
     console.log(`Health check: http://localhost:${env.port}/api/health`);
