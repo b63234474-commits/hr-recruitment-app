@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { createEmployee, getEmployee, updateEmployee } from '../services/employeeService';
+import { getCandidates } from '../services/candidateService';
+import { getOffers } from '../services/offerService';
 
 const initialFormState = {
   candidateId: '',
@@ -29,6 +31,29 @@ const EmployeeForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [candidates, setCandidates] = useState([]);
+  const [offers, setOffers] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setDataLoading(true);
+      try {
+        const [candidatesRes, offersRes] = await Promise.all([
+          getCandidates({ limit: 500 }),
+          getOffers({ limit: 500 }),
+        ]);
+        setCandidates(candidatesRes.data.data.candidates || []);
+        setOffers(offersRes.data.data.offers || []);
+      } catch (err) {
+        console.error('Unable to load candidates or offers:', err);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -113,12 +138,26 @@ const EmployeeForm = () => {
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
               <div className="col-md-6">
-                <label className="form-label">Candidate ID</label>
-                <input type="text" className="form-control" name="candidateId" value={form.candidateId} onChange={handleChange} placeholder="Candidate ID or ObjectId" />
+                <label className="form-label">Candidate</label>
+                <select className="form-select" name="candidateId" value={form.candidateId} onChange={handleChange}>
+                  <option value="">Select a candidate</option>
+                  {candidates.map((candidate) => (
+                    <option key={candidate._id} value={candidate._id}>
+                      {candidate.firstName} {candidate.lastName} ({candidate.email || 'N/A'})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="col-md-6">
-                <label className="form-label">Offer ID</label>
-                <input type="text" className="form-control" name="offerId" value={form.offerId} onChange={handleChange} placeholder="Offer ID or ObjectId" />
+                <label className="form-label">Offer</label>
+                <select className="form-select" name="offerId" value={form.offerId} onChange={handleChange}>
+                  <option value="">Select an offer</option>
+                  {offers.map((offer) => (
+                    <option key={offer._id} value={offer._id}>
+                      {offer.offerId || offer._id} - {offer.status || 'Pending'}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="col-md-6">
                 <label className="form-label">First Name</label>

@@ -255,7 +255,7 @@ export const deleteAssessment = asyncHandler(async (req, res) => {
     await candidate.save();
   }
 
-  await assessment.remove();
+  await assessment.deleteOne();
 
   res.status(200).json({
     success: true,

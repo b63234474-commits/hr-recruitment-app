@@ -245,7 +245,7 @@ export const deleteInterview = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Interview not found');
   }
 
-  await interview.remove();
+  await interview.deleteOne();
   res.status(200).json({
     success: true,
     message: 'Interview deleted successfully',

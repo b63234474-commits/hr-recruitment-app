@@ -114,40 +114,45 @@ const jobSchema = new mongoose.Schema(
 
 const getNextJobSequence = async () => {
   const counterCollection = mongoose.connection.collection('counters');
-  const existingCounter = await counterCollection.findOne({ _id: 'jobId' });
 
-  const [latest] = await Job.aggregate([
-    { $match: { jobId: { $regex: '^JOB-\\d+$' } } },
-    {
-      $project: {
-        numeric: {
-          $toInt: {
-            $substr: ['$jobId', 4, { $strLenCP: '$jobId' }],
+  try {
+    // Get the latest numeric ID from existing jobs
+    const [latest] = await Job.aggregate([
+      { $match: { jobId: { $regex: '^JOB-\\d+$' } } },
+      {
+        $project: {
+          numeric: {
+            $toInt: {
+              $substr: ['$jobId', 4, { $strLenCP: '$jobId' }],
+            },
           },
         },
       },
-    },
-    { $sort: { numeric: -1 } },
-    { $limit: 1 },
-  ]);
+      { $sort: { numeric: -1 } },
+      { $limit: 1 },
+    ]);
 
-  const currentMax = latest?.numeric || 0;
+    const currentMax = latest?.numeric || 0;
+    const nextSeq = currentMax + 1;
 
-  const update = await counterCollection.findOneAndUpdate(
-    { _id: 'jobId' },
-    existingCounter
-      ? existingCounter.seq < currentMax
-        ? { $set: { seq: currentMax }, $inc: { seq: 1 } }
-        : { $inc: { seq: 1 } }
-      : { $setOnInsert: { seq: currentMax }, $inc: { seq: 1 } },
-    { upsert: true, returnDocument: 'after' }
-  );
+    // Ensure counter collection has the right value
+    const result = await counterCollection.findOneAndUpdate(
+      { _id: 'jobId' },
+      { $set: { seq: nextSeq } },
+      { upsert: true, returnDocument: 'after', new: true }
+    );
 
-  if (!update.value || typeof update.value.seq !== 'number') {
-    throw new Error('Failed to generate job ID');
+    const seq = result.value?.seq || nextSeq;
+
+    if (typeof seq !== 'number') {
+      throw new Error('Invalid sequence number');
+    }
+
+    return `JOB-${String(seq).padStart(3, '0')}`;
+  } catch (error) {
+    console.error('Error generating job ID:', error);
+    throw new Error(`Failed to generate job ID: ${error.message}`);
   }
-
-  return `JOB-${String(update.value.seq).padStart(3, '0')}`;
 };
 
 jobSchema.pre('validate', async function (next) {

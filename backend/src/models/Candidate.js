@@ -68,6 +68,12 @@ const candidateSchema = new mongoose.Schema(
         trim: true,
       },
     ],
+    extractedSkills: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     education: {
       type: String,
       trim: true,

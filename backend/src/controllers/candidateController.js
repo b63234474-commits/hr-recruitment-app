@@ -8,6 +8,7 @@ import Job from '../models/Job.js';
 import Partner from '../models/Partner.js';
 import ActivityLog from '../models/ActivityLog.js';
 import { PIPELINE_STATUSES } from '../config/pipelineStatuses.js';
+import { extractSkillsFromText, extractEducationFromText } from '../utils/skillExtractor.js';
 
 const resolveJobReference = async (appliedJob) => {
   if (!appliedJob) {
@@ -241,7 +242,7 @@ const parseResumeText = (text) => {
 
     if (/skills?[:\-]/i.test(line)) {
       const skillsText = line.split(/[:\-]/).slice(1).join('-').trim();
-      result.skills = skillsText.split(/,|;/).map((item) => item.trim()).filter(Boolean);
+      result.skills = skillsText.split(/,|;/).map((item) => item.toLowerCase().trim()).filter(Boolean);
     }
 
     if (/certifications?[:\-]/i.test(line)) {
@@ -276,7 +277,31 @@ export const uploadResume = asyncHandler(async (req, res) => {
 
   const { mimetype, path: filePath, filename } = req.file;
   const text = await extractText(filePath, mimetype);
+
+  console.log('Resume extracted text length:', text.length);
+
+  if (!text || !text.trim()) {
+    console.error('Resume text extraction returned empty content', {
+      mimetype,
+      filename,
+      filePath,
+    });
+    throw new ApiError(400, 'Resume text extraction returned empty content');
+  }
+
   const parsed = parseResumeText(text);
+
+  // Extract skills automatically from resume text
+  const extractedSkills = extractSkillsFromText(text);
+  console.log('Resume extracted skills:', extractedSkills);
+  parsed.extractedSkills = extractedSkills;
+
+  // Extract education automatically from resume text
+  const extractedEducation = extractEducationFromText(text);
+  console.log('Resume extracted education:', extractedEducation);
+  if (extractedEducation && !parsed.education) {
+    parsed.education = extractedEducation;
+  }
 
   res.status(200).json({
     success: true,
@@ -285,6 +310,8 @@ export const uploadResume = asyncHandler(async (req, res) => {
       parsed,
       resumeUrl: `/uploads/${filename}`,
       resumeFilename: filename,
+      extractedSkills,
+      extractedEducation,
     },
   });
 });
@@ -301,6 +328,7 @@ export const createCandidate = asyncHandler(async (req, res) => {
     currentDesignation,
     referredEmployeeName,
     skills,
+    extractedSkills,
     education,
     certifications,
     projects,
@@ -333,9 +361,14 @@ export const createCandidate = asyncHandler(async (req, res) => {
     currentCompany,
     currentDesignation,
     skills: Array.isArray(skills)
-      ? skills
+      ? skills.map(s => s.toLowerCase().trim()).filter(Boolean)
       : skills
-      ? skills.split(',').map((item) => item.trim()).filter(Boolean)
+      ? skills.split(',').map((item) => item.toLowerCase().trim()).filter(Boolean)
+      : [],
+    extractedSkills: Array.isArray(extractedSkills)
+      ? extractedSkills.map(s => s.toLowerCase().trim()).filter(Boolean)
+      : extractedSkills
+      ? extractedSkills.split(',').map((item) => item.toLowerCase().trim()).filter(Boolean)
       : [],
     education,
     certifications: Array.isArray(certifications)
@@ -523,6 +556,7 @@ export const updateCandidate = asyncHandler(async (req, res) => {
     currentDesignation,
     referredEmployeeName,
     skills,
+    extractedSkills,
     education,
     certifications,
     projects,
@@ -551,10 +585,15 @@ export const updateCandidate = asyncHandler(async (req, res) => {
   candidate.currentDesignation = currentDesignation ?? candidate.currentDesignation;
   candidate.referredEmployeeName = referredEmployeeName ?? candidate.referredEmployeeName;
   candidate.skills = Array.isArray(skills)
-    ? skills
+    ? skills.map(s => s.toLowerCase().trim()).filter(Boolean)
     : skills
-    ? skills.split(',').map((item) => item.trim()).filter(Boolean)
+    ? skills.split(',').map((item) => item.toLowerCase().trim()).filter(Boolean)
     : candidate.skills;
+  candidate.extractedSkills = Array.isArray(extractedSkills)
+    ? extractedSkills.map(s => s.toLowerCase().trim()).filter(Boolean)
+    : extractedSkills
+    ? extractedSkills.split(',').map((item) => item.toLowerCase().trim()).filter(Boolean)
+    : candidate.extractedSkills;
   candidate.education = education ?? candidate.education;
   candidate.certifications = Array.isArray(certifications)
     ? certifications

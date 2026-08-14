@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getCandidate, deleteCandidate, matchCandidate } from '../services/candidateService';
+import { getCandidate, deleteCandidate } from '../services/candidateService';
 import { getInterviews } from '../services/interviewService';
+import { getResumeUrl } from '../utils/urlHelper';
 
 const CandidateDetails = () => {
   const { id } = useParams();
@@ -9,8 +10,6 @@ const CandidateDetails = () => {
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [matchLoading, setMatchLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,21 +36,6 @@ const CandidateDetails = () => {
       navigate('/candidates');
     } catch (err) {
       setError(err.response?.data?.message || 'Unable to delete candidate');
-    }
-  };
-
-  const handleMatch = async () => {
-    setMatchLoading(true);
-    setError('');
-    setSuccess('');
-    try {
-      const response = await matchCandidate(id);
-      setCandidate(response.data.data.candidate);
-      setSuccess('Match results recalculated successfully.');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Unable to recalculate match');
-    } finally {
-      setMatchLoading(false);
     }
   };
 
@@ -108,42 +92,7 @@ const CandidateDetails = () => {
       </div>
 
       <div className="row g-4">
-        <div className="col-lg-8">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-body">
-              <div className="mb-3">
-                <h5 className="card-title mb-1">Candidate Match</h5>
-                <p className="text-muted mb-0">{candidate.matchCategory || 'Review Required'}</p>
-              </div>
-              <div className="row g-3">
-                <div className="col-sm-6">
-                  <div className="small text-uppercase text-muted mb-2">Matching Skills</div>
-                  <p className="mb-0">{candidate.matchDetails?.matchingSkills?.join(', ') || '-'}</p>
-                </div>
-                <div className="col-sm-6">
-                  <div className="small text-uppercase text-muted mb-2">Missing Skills</div>
-                  <p className="mb-0">{candidate.matchDetails?.missingSkills?.join(', ') || '-'}</p>
-                </div>
-                <div className="col-sm-6">
-                  <div className="small text-uppercase text-muted mb-2">Experience Match</div>
-                  <p className="mb-0">{candidate.matchDetails?.experienceMatch || '-'}</p>
-                </div>
-                <div className="col-sm-6">
-                  <div className="small text-uppercase text-muted mb-2">Education Match</div>
-                  <p className="mb-0">{candidate.matchDetails?.educationMatch || '-'}</p>
-                </div>
-                <div className="col-sm-6">
-                  <div className="small text-uppercase text-muted mb-2">Location Match</div>
-                  <p className="mb-0">{candidate.matchDetails?.locationMatch || '-'}</p>
-                </div>
-                <div className="col-sm-6">
-                  <div className="small text-uppercase text-muted mb-2">Title Match</div>
-                  <p className="mb-0">{candidate.matchDetails?.titleMatch || '-'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div className="col-lg-12">
           <div className="card mb-4 shadow-sm">
             <div className="card-body">
               <h5 className="card-title">Contact Information</h5>
@@ -202,8 +151,8 @@ const CandidateDetails = () => {
               <h5 className="card-title">Resume</h5>
               <p className="mb-3">{candidate.resumeFilename || 'Not uploaded'}</p>
               {candidate.resumeUrl && (
-                <a href={candidate.resumeUrl} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
-                  Download Resume
+                <a href={getResumeUrl(candidate.resumeUrl)} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
+                  <i className="bi bi-download me-1"></i>Download Resume
                 </a>
               )}
             </div>
@@ -268,36 +217,6 @@ const CandidateDetails = () => {
               ) : (
                 <div className="text-muted">No interviews scheduled yet.</div>
               )}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-lg-4">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Skills</h5>
-              <p className="mb-0">{candidate.skills?.join(', ') || '-'}</p>
-            </div>
-          </div>
-
-          <div className="card mb-4 shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Education</h5>
-              <p className="mb-0">{candidate.education || '-'}</p>
-            </div>
-          </div>
-
-          <div className="card mb-4 shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Certifications</h5>
-              <p className="mb-0">{candidate.certifications?.join(', ') || '-'}</p>
-            </div>
-          </div>
-
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Projects</h5>
-              <p className="mb-0">{candidate.projects?.join(', ') || '-'}</p>
             </div>
           </div>
         </div>

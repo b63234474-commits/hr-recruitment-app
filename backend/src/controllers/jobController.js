@@ -2,6 +2,7 @@ import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../middleware/asyncHandler.js';
 import mongoose from 'mongoose';
 import Job from '../models/Job.js';
+import { extractSkillsFromJD } from '../utils/skillExtractor.js';
 
 const parseStringArray = (value) => {
   if (Array.isArray(value)) {
@@ -80,6 +81,20 @@ export const createJob = asyncHandler(async (req, res) => {
     );
   }
 
+  // Extract skills from job description if not manually provided
+  let finalRequiredSkills = parseStringArray(requiredSkills).map(s => s.toLowerCase().trim());
+  let finalPreferredSkills = parseStringArray(preferredSkills).map(s => s.toLowerCase().trim());
+
+  // If no manual skills provided, extract from job description
+  if (finalRequiredSkills.length === 0 && finalPreferredSkills.length === 0) {
+    console.log('Extracting skills from job description:', jobDescription.substring(0, 100) + '...');
+    const extracted = extractSkillsFromJD(jobDescription);
+    finalRequiredSkills = extracted.requiredSkills;
+    finalPreferredSkills = extracted.preferredSkills;
+    console.log('Extracted required skills:', finalRequiredSkills);
+    console.log('Extracted preferred skills:', finalPreferredSkills);
+  }
+
   const job = await Job.create({
     jobTitle,
     department,
@@ -88,8 +103,8 @@ export const createJob = asyncHandler(async (req, res) => {
     minimumExperience: Number(minimumExperience),
     maximumExperience: Number(maximumExperience),
     salaryRange,
-    requiredSkills: parseStringArray(requiredSkills),
-    preferredSkills: parseStringArray(preferredSkills),
+    requiredSkills: finalRequiredSkills,
+    preferredSkills: finalPreferredSkills,
     education,
     responsibilities,
     qualifications,
@@ -199,6 +214,19 @@ export const updateJob = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Job not found');
   }
 
+  let finalRequiredSkills = parseStringArray(req.body.requiredSkills).map(s => s.toLowerCase().trim());
+  let finalPreferredSkills = parseStringArray(req.body.preferredSkills).map(s => s.toLowerCase().trim());
+
+  // If no manual skills provided, extract from job description
+  if (finalRequiredSkills.length === 0 && finalPreferredSkills.length === 0 && req.body.jobDescription) {
+    console.log('Extracting skills from job description (update):', req.body.jobDescription.substring(0, 100) + '...');
+    const extracted = extractSkillsFromJD(req.body.jobDescription);
+    finalRequiredSkills = extracted.requiredSkills;
+    finalPreferredSkills = extracted.preferredSkills;
+    console.log('Extracted required skills (update):', finalRequiredSkills);
+    console.log('Extracted preferred skills (update):', finalPreferredSkills);
+  }
+
   const updates = {
     jobTitle: req.body.jobTitle,
     department: req.body.department,
@@ -213,8 +241,8 @@ export const updateJob = asyncHandler(async (req, res) => {
         ? Number(req.body.maximumExperience)
         : job.maximumExperience,
     salaryRange: req.body.salaryRange,
-    requiredSkills: parseStringArray(req.body.requiredSkills),
-    preferredSkills: parseStringArray(req.body.preferredSkills),
+    requiredSkills: finalRequiredSkills,
+    preferredSkills: finalPreferredSkills,
     education: req.body.education,
     responsibilities: req.body.responsibilities,
     qualifications: req.body.qualifications,
@@ -266,7 +294,7 @@ export const deleteJob = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Job not found');
   }
 
-  await job.remove();
+  await job.deleteOne();
 
   res.status(200).json({
     success: true,

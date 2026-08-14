@@ -123,7 +123,7 @@ export const deletePartner = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Partner not found');
   }
 
-  await partner.remove();
+  await partner.deleteOne();
 
   res.status(200).json({
     success: true,

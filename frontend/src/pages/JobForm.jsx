@@ -11,8 +11,6 @@ const initialFormState = {
   minimumExperience: 0,
   maximumExperience: 0,
   salaryRange: '',
-  requiredSkills: '',
-  preferredSkills: '',
   education: '',
   responsibilities: '',
   qualifications: '',
@@ -50,8 +48,6 @@ const JobForm = () => {
           minimumExperience: job.minimumExperience || 0,
           maximumExperience: job.maximumExperience || 0,
           salaryRange: job.salaryRange || '',
-          requiredSkills: (job.requiredSkills || []).join(', '),
-          preferredSkills: (job.preferredSkills || []).join(', '),
           education: job.education || '',
           responsibilities: job.responsibilities || '',
           qualifications: job.qualifications || '',
@@ -302,28 +298,6 @@ const JobForm = () => {
                   name="education"
                   value={form.education}
                   onChange={handleChange}
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label">Required Skills</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="requiredSkills"
-                  value={form.requiredSkills}
-                  onChange={handleChange}
-                  placeholder="Comma-separated"
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label">Preferred Skills</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="preferredSkills"
-                  value={form.preferredSkills}
-                  onChange={handleChange}
-                  placeholder="Comma-separated"
                 />
               </div>
               <div className="col-12">

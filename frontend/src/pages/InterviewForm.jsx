@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { createInterview, getInterview, updateInterview } from '../services/interviewService';
-import { getCandidate } from '../services/candidateService';
+import { getCandidate, getCandidates } from '../services/candidateService';
+import { getJobs } from '../services/jobService';
+import { getAssessments } from '../services/assessmentService';
 import Layout from '../components/Layout';
 
 const initialFormState = {
@@ -29,6 +31,32 @@ const InterviewForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [candidates, setCandidates] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [assessments, setAssessments] = useState([]);
+  const [loadingLists, setLoadingLists] = useState(true);
+
+  useEffect(() => {
+    // Load dropdown lists
+    const loadLists = async () => {
+      try {
+        const [candidatesRes, jobsRes, assessmentsRes] = await Promise.all([
+          getCandidates(),
+          getJobs(),
+          getAssessments(),
+        ]);
+        setCandidates(candidatesRes.data.data.candidates || []);
+        setJobs(jobsRes.data.data.jobs || []);
+        setAssessments(assessmentsRes.data.data.assessments || []);
+      } catch (err) {
+        console.error('Error loading dropdown lists:', err);
+      } finally {
+        setLoadingLists(false);
+      }
+    };
+
+    loadLists();
+  }, []);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -136,42 +164,63 @@ const InterviewForm = () => {
 
       {error && <div className="alert alert-danger">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
+      {loadingLists && <div className="alert alert-info">Loading form data...</div>}
 
       <div className="card">
         <div className="card-body">
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
               <div className="col-md-6">
-                <label className="form-label">Candidate ID</label>
-                <input
-                  type="text"
-                  className="form-control"
+                <label className="form-label">Candidate</label>
+                <select
+                  className="form-select"
                   name="candidate"
                   value={form.candidate}
                   onChange={handleChange}
                   required
-                />
-                {candidateName && <div className="form-text">{candidateName}</div>}
+                  disabled={loadingLists}
+                >
+                  <option value="">Select a candidate</option>
+                  {candidates.map((cand) => (
+                    <option key={cand._id} value={cand._id}>
+                      {cand.firstName} {cand.lastName} ({cand.email})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="col-md-6">
-                <label className="form-label">Job ID or Title</label>
-                <input
-                  type="text"
-                  className="form-control"
+                <label className="form-label">Job</label>
+                <select
+                  className="form-select"
                   name="job"
                   value={form.job}
                   onChange={handleChange}
-                />
+                  disabled={loadingLists}
+                >
+                  <option value="">Select a job</option>
+                  {jobs.map((job) => (
+                    <option key={job._id} value={job._id}>
+                      {job.jobTitle} ({job.department})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="col-md-6">
-                <label className="form-label">Assessment ID</label>
-                <input
-                  type="text"
-                  className="form-control"
+                <label className="form-label">Assessment</label>
+                <select
+                  className="form-select"
                   name="assessment"
                   value={form.assessment}
                   onChange={handleChange}
-                />
+                  disabled={loadingLists}
+                >
+                  <option value="">Select an assessment</option>
+                  {assessments.map((assess) => (
+                    <option key={assess._id} value={assess._id}>
+                      {assess.name || assess.title} (ID: {assess._id.slice(-6)})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="col-md-6">
                 <label className="form-label">Interview Type</label>

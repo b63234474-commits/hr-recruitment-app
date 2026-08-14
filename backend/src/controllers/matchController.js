@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import Candidate from '../models/Candidate.js';
 import Job from '../models/Job.js';
 import MatchResult from '../models/MatchResult.js';
+import { calculateMatchScore } from '../utils/matchingAlgorithm.js';
+import { extractSkillsFromJD } from '../utils/skillExtractor.js';
 
 const parseExperienceNumber = (experience = '') => {
   const match = experience.match(/\d+(\.\d+)?/);
@@ -33,88 +35,6 @@ const resolveJobReference = async (jobReference) => {
 export const MATCH_THRESHOLDS = {
   suitable: 80,
   reviewRequired: 50,
-};
-
-export const buildMatchDetails = (candidate, job) => {
-  const candidateSkills = (candidate.skills || []).map((skill) => skill.toLowerCase().trim());
-  const requiredSkills = (job.requiredSkills || []).map((skill) => skill.toLowerCase().trim());
-  const preferredSkills = (job.preferredSkills || []).map((skill) => skill.toLowerCase().trim());
-
-  const matchingRequired = requiredSkills.filter((skill) => candidateSkills.includes(skill));
-  const matchingPreferred = preferredSkills.filter((skill) => candidateSkills.includes(skill));
-  const matchingSkills = Array.from(new Set([...matchingRequired, ...matchingPreferred]));
-  const missingSkills = requiredSkills.filter((skill) => !candidateSkills.includes(skill));
-
-  const candidateExperience = parseExperienceNumber(candidate.experience);
-  const minExp = Number(job.minimumExperience || 0);
-  const maxExp = Number(job.maximumExperience || 0);
-  let experienceMatch = 'Not enough data';
-  let experienceScore = 0;
-
-  if (candidateExperience !== null) {
-    if (candidateExperience >= minExp && candidateExperience <= maxExp) {
-      experienceMatch = 'Good';
-      experienceScore = 20;
-    } else if (candidateExperience >= minExp - 1) {
-      experienceMatch = 'Acceptable';
-      experienceScore = 10;
-    } else {
-      experienceMatch = 'Poor';
-      experienceScore = 0;
-    }
-  }
-
-  const educationMatch = job.education
-    ? candidate.education && candidate.education.toLowerCase().includes(job.education.toLowerCase())
-      ? 'Matched'
-      : 'Mismatched'
-    : 'Not specified';
-  const educationScore = job.education ? (educationMatch === 'Matched' ? 10 : 0) : 10;
-
-  const locationMatch = job.location && candidate.location
-    ? candidate.location.toLowerCase().includes(job.location.toLowerCase()) ||
-      job.location.toLowerCase().includes(candidate.location.toLowerCase())
-      ? 'Matched'
-      : 'Mismatched'
-    : 'Not specified';
-  const locationScore = job.location ? (locationMatch === 'Matched' ? 5 : 0) : 5;
-
-  const titleMatch = job.jobTitle && candidate.currentDesignation
-    ? candidate.currentDesignation.toLowerCase().includes(job.jobTitle.toLowerCase()) ||
-      job.jobTitle.toLowerCase().includes(candidate.currentDesignation.toLowerCase())
-      ? 'Matched'
-      : 'Mismatched'
-    : 'Not specified';
-  const titleScore = job.jobTitle ? (titleMatch === 'Matched' ? 5 : 0) : 5;
-
-  const requiredScore = requiredSkills.length > 0
-    ? Math.round((matchingRequired.length / requiredSkills.length) * 40)
-    : 40;
-  const preferredScore = preferredSkills.length > 0
-    ? Math.round((matchingPreferred.length / preferredSkills.length) * 20)
-    : 20;
-
-  const score = Math.min(
-    100,
-    requiredScore + preferredScore + experienceScore + educationScore + locationScore + titleScore
-  );
-
-  let result = 'Review Required';
-  if (score >= MATCH_THRESHOLDS.suitable) result = 'Suitable';
-  else if (score < MATCH_THRESHOLDS.reviewRequired) result = 'Not Suitable';
-
-  return {
-    score,
-    result,
-    details: {
-      matchingSkills,
-      missingSkills,
-      experienceMatch,
-      educationMatch,
-      locationMatch,
-      titleMatch,
-    },
-  };
 };
 
 export const getMatchingCandidates = asyncHandler(async (req, res) => {
@@ -148,15 +68,27 @@ export const getMatchingCandidates = asyncHandler(async (req, res) => {
 
   let candidates = await Candidate.find(candidateQuery).lean();
 
+  // Use enhanced matching algorithm
   const matches = await Promise.all(
     candidates.map(async (candidate) => {
-      const match = buildMatchDetails(candidate, job);
-      return {
-        ...candidate,
-        matchScore: match.score,
-        result: match.result,
-        matchDetails: match.details,
-      };
+      try {
+        const matchResult = calculateMatchScore(candidate, job);
+        return {
+          ...candidate,
+          matchScore: matchResult.overallMatchScore,
+          result: matchResult.suitability,
+          matchDetails: matchResult,
+        };
+      } catch (err) {
+        // Fallback to old matching if new algorithm fails
+        const match = buildMatchDetails(candidate, job);
+        return {
+          ...candidate,
+          matchScore: match.score,
+          result: match.result,
+          matchDetails: { details: match.details },
+        };
+      }
     })
   );
 
@@ -197,7 +129,19 @@ export const getCandidateMatch = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Candidate not found');
   }
 
-  const match = buildMatchDetails(candidate, job);
+  // Use enhanced matching algorithm
+  let match;
+  try {
+    match = calculateMatchScore(candidate, job);
+  } catch (err) {
+    // Fallback to old algorithm
+    const oldMatch = buildMatchDetails(candidate, job);
+    match = { 
+      overallMatchScore: oldMatch.score,
+      suitability: oldMatch.result,
+      ...oldMatch
+    };
+  }
 
   const existingMatch = await MatchResult.findOne({
     candidateId: candidate._id,
@@ -205,16 +149,29 @@ export const getCandidateMatch = asyncHandler(async (req, res) => {
     resumeFilename: candidate.resumeFilename,
   });
 
+  // Auto-extract skills from job description if not already extracted
+  let jobSkills = job.requiredSkills || [];
+  if (jobSkills.length === 0 && job.jobDescription) {
+    console.log('Auto-extracting skills from job description for job:', job._id);
+    const extracted = extractSkillsFromJD(job.jobDescription);
+    jobSkills = extracted.requiredSkills || [];
+    // Also update the job in database for future use
+    await Job.findByIdAndUpdate(job._id, { requiredSkills: jobSkills });
+  }
+
+  // Enhance response with detailed skill information
+  const enhancedMatch = {
+    ...match,
+    jobSkills,
+    resumeSkills: candidate.extractedSkills || candidate.skills || [],
+  };
+
   res.status(200).json({
     success: true,
     data: {
       job,
       candidate,
-      match: {
-        score: match.score,
-        result: match.result,
-        details: match.details,
-      },
+      match: enhancedMatch,
       existingMatch,
     },
   });
@@ -235,7 +192,20 @@ export const saveCandidateMatch = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Candidate resume is unavailable');
   }
 
-  const match = buildMatchDetails(candidate, job);
+  // Use enhanced matching algorithm
+  let match;
+  try {
+    match = calculateMatchScore(candidate, job);
+  } catch (err) {
+    // Fallback to old algorithm
+    const oldMatch = buildMatchDetails(candidate, job);
+    match = { 
+      overallMatchScore: oldMatch.score,
+      suitability: oldMatch.result,
+      matchedSkills: oldMatch.details.matchingSkills,
+      missingSkills: oldMatch.details.missingSkills,
+    };
+  }
 
   const matchResult = await MatchResult.findOneAndUpdate(
     {
@@ -246,14 +216,34 @@ export const saveCandidateMatch = asyncHandler(async (req, res) => {
     {
       resumeUrl: candidate.resumeUrl,
       resumeFilename: candidate.resumeFilename,
-      matchScore: match.score,
-      result: match.result,
-      matchingSkills: match.details.matchingSkills,
-      missingSkills: match.details.missingSkills,
-      experienceMatch: match.details.experienceMatch,
-      educationMatch: match.details.educationMatch,
-      locationMatch: match.details.locationMatch,
-      titleMatch: match.details.titleMatch,
+      overallMatchScore: match.overallMatchScore,
+      matchScore: match.overallMatchScore,
+      skillMatchScore: match.skillMatchScore || match.overallMatchScore,
+      experienceMatchScore: match.experienceMatchScore || 0,
+      educationMatchScore: match.educationMatchScore || 0,
+      designationMatchScore: match.designationMatchScore || 0,
+      result: match.suitability || 'Review Required',
+      suitability: match.suitability || 'Review Required',
+      matchingSkills: match.matchedSkills || [],
+      missingSkills: match.missingSkills || [],
+      preferredSkillsMatched: match.preferredSkillsMatched || [],
+      candidateExperience: match.candidateExperience,
+      requiredExperience: match.requiredExperience,
+      experienceMatch: match.experienceMatch?.toString(),
+      experienceMatchPercentage: match.experienceMatchPercentage || 0,
+      educationMatch: match.educationMatch,
+      candidateEducation: match.candidateEducation,
+      requiredEducation: match.requiredEducation,
+      locationMatch: match.locationMatch,
+      titleMatch: match.titleMatch,
+      designationRelevance: match.designationRelevance,
+      explanation: match.explanation,
+      matchingReasons: match.matchingReasons || [],
+      missingReasons: match.missingReasons || [],
+      candidateSkillsExtracted: match.candidateSkillsExtracted || candidate.extractedSkills || candidate.skills || [],
+      jobRequiredSkills: match.jobRequiredSkills || job.requiredSkills || [],
+      jobPreferredSkills: match.jobPreferredSkills || job.preferredSkills || [],
+      scoringWeights: match.scoringWeights || {},
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
