@@ -106,7 +106,7 @@ const normalizeMonthLabels = (rows) => rows.map((row) => ({ month: row._id, coun
 const buildSourceBreakdown = (sourceCounts) => sourceCounts.map((item) => ({ source: item._id || 'Unknown', count: item.count }));
 
 export const getDashboardStats = asyncHandler(async (req, res) => {
-  const [totalJobs, activeJobs, closedJobs, totalCandidates, candidateStatusCounts, interviewCount, offersSent, offersAccepted, hiredCount, rejectedCount, candidatesByStage, candidatesByJob, applicationsByMonth, interviewsByMonth, offersByMonth, hiresByMonth, sourceReport, rejectionReasons, recentCandidates, recentJobs, upcomingInterviews, recentOffers, recentHires] = await Promise.all([
+  const [totalJobs, activeJobs, closedJobs, totalCandidates, candidateStatusCounts, interviewCount, offersSent, offersAccepted, shortlistedCount, hiredCount, rejectedCount, candidatesByStage, candidatesByJob, applicationsByMonth, interviewsByMonth, offersByMonth, hiresByMonth, sourceReport, rejectionReasons, recentCandidates, recentJobs, upcomingInterviews, recentOffers, recentHires] = await Promise.all([
     Job.countDocuments(),
     Job.countDocuments({ status: 'Active' }),
     Job.countDocuments({ status: 'Closed' }),
@@ -115,6 +115,7 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     Interview.countDocuments(),
     Offer.countDocuments({ status: 'Sent' }),
     Candidate.countDocuments({ status: 'Offer Accepted' }),
+    Candidate.countDocuments({ status: 'Shortlisted' }),
     Candidate.countDocuments({ status: 'Hired' }),
     Candidate.countDocuments({ status: 'Rejected' }),
     Candidate.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
@@ -189,7 +190,7 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
         totalCandidates,
         newCandidates: statusMap.New || 0,
         screening: statusMap.Screening || 0,
-        shortlisted: statusMap.Shortlisted || 0,
+        shortlisted: shortlistedCount,
         assessment: statusMap.Assessment || 0,
         interviews: interviewCount,
         offersSent,

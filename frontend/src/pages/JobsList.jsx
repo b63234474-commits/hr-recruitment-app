@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getJobs, deleteJob } from '../services/jobService';
 import StatusBadge from '../components/StatusBadge';
 import Layout from '../components/Layout';
 
 const JobsList = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
- const [locationFilter, setLocationFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
   const [employmentTypeFilter, setEmploymentTypeFilter] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
 
   const loadJobs = async (params = {}) => {
     setLoading(true);
@@ -20,7 +23,7 @@ const JobsList = () => {
 
     try {
       const response = await getJobs(params);
-      setJobs(response.data.data.jobs);
+      setJobs(response.data.data.jobs || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Unable to load jobs');
     } finally {
@@ -29,13 +32,59 @@ const JobsList = () => {
   };
 
   useEffect(() => {
-    loadJobs();
-  }, []);
+    const params = new URLSearchParams(location.search);
+    const nextStatus = params.get('status') || '';
+    const nextDepartment = params.get('department') || '';
+    const nextLocation = params.get('location') || '';
+    const nextType = params.get('employmentType') || '';
+    const nextSearch = params.get('search') || '';
 
-  const filteredJobs = useMemo(() => jobs, [jobs]);
+    setSearch(nextSearch);
+    setStatusFilter(nextStatus);
+    setDepartmentFilter(nextDepartment);
+    setLocationFilter(nextLocation);
+    setEmploymentTypeFilter(nextType);
+
+    loadJobs({
+      search: nextSearch,
+      status: nextStatus,
+      department: nextDepartment,
+      location: nextLocation,
+      employmentType: nextType,
+    });
+  }, [location.search]);
+
+  const filteredJobs = useMemo(() => {
+    const sorted = [...jobs];
+    switch (sortBy) {
+      case 'title-asc':
+        sorted.sort((a, b) => (a.jobTitle || '').localeCompare(b.jobTitle || ''));
+        break;
+      case 'title-desc':
+        sorted.sort((a, b) => (b.jobTitle || '').localeCompare(a.jobTitle || ''));
+        break;
+      case 'closing-asc':
+        sorted.sort((a, b) => new Date(a.closingDate || 0) - new Date(b.closingDate || 0));
+        break;
+      case 'opening-desc':
+        sorted.sort((a, b) => (Number(b.numberOfOpenings) || 0) - (Number(a.numberOfOpenings) || 0));
+        break;
+      default:
+        sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+    return sorted;
+  }, [jobs, sortBy]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    const params = new URLSearchParams({
+      search,
+      status: statusFilter,
+      department: departmentFilter,
+      location: locationFilter,
+      employmentType: employmentTypeFilter,
+    });
+    navigate(`/jobs?${params.toString()}`);
     await loadJobs({
       search,
       status: statusFilter,
@@ -51,6 +100,8 @@ const JobsList = () => {
     setDepartmentFilter('');
     setLocationFilter('');
     setEmploymentTypeFilter('');
+    setSortBy('newest');
+    navigate('/jobs');
     await loadJobs();
   };
 
@@ -106,6 +157,20 @@ const JobsList = () => {
                 <option value="Active">Active</option>
                 <option value="Paused">Paused</option>
                 <option value="Closed">Closed</option>
+              </select>
+            </div>
+            <div className="col-md-2">
+              <label className="form-label">Sort</label>
+              <select
+                className="form-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="newest">Newest</option>
+                <option value="title-asc">Title A–Z</option>
+                <option value="title-desc">Title Z–A</option>
+                <option value="closing-asc">Closing Soonest</option>
+                <option value="opening-desc">Openings High-Low</option>
               </select>
             </div>
             <div className="col-md-2">

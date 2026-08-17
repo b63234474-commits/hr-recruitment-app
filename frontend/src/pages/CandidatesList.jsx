@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getCandidates, deleteCandidate } from '../services/candidateService';
 import Layout from '../components/Layout';
 import { getResumeUrl } from '../utils/urlHelper';
 
 const CandidatesList = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [partnerFilter, setPartnerFilter] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
 
   const loadCandidates = async (params = {}) => {
     setLoading(true);
@@ -26,11 +29,45 @@ const CandidatesList = () => {
   };
 
   useEffect(() => {
-    loadCandidates();
-  }, []);
+    const params = new URLSearchParams(location.search);
+    const nextSearch = params.get('search') || '';
+    const nextStatus = params.get('status') || '';
+    const nextPartner = params.get('partner') || '';
+
+    setSearch(nextSearch);
+    setStatusFilter(nextStatus);
+    setPartnerFilter(nextPartner);
+
+    loadCandidates({
+      search: nextSearch,
+      status: nextStatus,
+      partner: nextPartner,
+    });
+  }, [location.search]);
+
+  const sortedCandidates = useMemo(() => {
+    const data = [...candidates];
+    switch (sortBy) {
+      case 'name-asc':
+        data.sort((a, b) => `${a.firstName || ''} ${a.lastName || ''}`.localeCompare(`${b.firstName || ''} ${b.lastName || ''}`));
+        break;
+      case 'match-desc':
+        data.sort((a, b) => Number(b.matchScore || 0) - Number(a.matchScore || 0));
+        break;
+      default:
+        data.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+    return data;
+  }, [candidates, sortBy]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    const params = new URLSearchParams({
+      search,
+      status: statusFilter,
+      partner: partnerFilter,
+    });
+    navigate(`/candidates?${params.toString()}`);
     await loadCandidates({
       search,
       status: statusFilter,
@@ -42,6 +79,8 @@ const CandidatesList = () => {
     setSearch('');
     setStatusFilter('');
     setPartnerFilter('');
+    setSortBy('newest');
+    navigate('/candidates');
     await loadCandidates();
   };
 
@@ -114,6 +153,18 @@ const CandidatesList = () => {
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>
+              <div className="col-md-4">
+                <label className="form-label">Sort</label>
+                <select
+                  className="form-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="newest">Newest</option>
+                  <option value="name-asc">Name A–Z</option>
+                  <option value="match-desc">Highest Match</option>
+                </select>
+              </div>
               <div className="col-md-12 d-flex gap-2 justify-content-end">
                 <button type="submit" className="btn btn-outline-primary">
                   Search
@@ -149,7 +200,7 @@ const CandidatesList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {candidates.map((candidate) => (
+                  {sortedCandidates.map((candidate) => (
                     <tr key={candidate._id} className="align-middle">
                       <td className="align-middle">
                         <div className="d-flex align-items-center gap-3">
