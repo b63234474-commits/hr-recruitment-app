@@ -6,6 +6,12 @@ export const uploadResume = (formData) => api.post('/candidates/upload', formDat
   },
 });
 
+export const uploadCandidateImage = (formData) => api.post('/candidates/upload-image', formData, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
+
 export const getCandidates = (params) => api.get('/candidates', { params });
 export const getCandidate = (id) => api.get(`/candidates/${id}`);
 export const createCandidate = (candidateData) => api.post('/candidates', candidateData);

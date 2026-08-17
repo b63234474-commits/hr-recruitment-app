@@ -170,9 +170,12 @@ const EmployeesList = () => {
                     <tr key={employee._id}>
                       <td>{employee.employeeId}</td>
                       <td>
-                        <Link to={`/employees/${employee._id}`} className="text-decoration-none">
+                        <Link to={`/employees/${employee._id}`} className="text-decoration-none fw-semibold">
                           {employee.firstName} {employee.lastName}
                         </Link>
+                        <div className="small text-muted">
+                          {employee.designation || employee.department || 'No designation'}
+                        </div>
                       </td>
                       <td>{employee.department || '-'}</td>
                       <td>{employee.designation || '-'}</td>
@@ -181,15 +184,17 @@ const EmployeesList = () => {
                       <td>{employee.employmentType || '-'}</td>
                       <td><StatusBadge status={employee.onboardingStatus || 'Pending'} /></td>
                       <td className="text-end">
-                        <Link className="btn btn-sm btn-outline-secondary me-2" to={`/employees/${employee._id}`}>
-                          View
-                        </Link>
-                        <Link className="btn btn-sm btn-outline-primary me-2" to={`/employees/${employee._id}/edit`}>
-                          Edit
-                        </Link>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(employee._id)}>
-                          Delete
-                        </button>
+                        <div className="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+                          <Link className="btn btn-sm btn-outline-secondary" to={`/employees/${employee._id}`}>
+                            View
+                          </Link>
+                          <Link className="btn btn-sm btn-outline-primary" to={`/employees/${employee._id}/edit`}>
+                            Edit
+                          </Link>
+                          <button className="btn btn-sm btn-danger" onClick={() => handleDelete(employee._id)}>
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

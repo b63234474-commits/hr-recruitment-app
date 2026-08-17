@@ -107,6 +107,14 @@ const candidateSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    imageUrl: {
+      type: String,
+      trim: true,
+    },
+    imageFilename: {
+      type: String,
+      trim: true,
+    },
     status: {
       type: String,
       enum: [

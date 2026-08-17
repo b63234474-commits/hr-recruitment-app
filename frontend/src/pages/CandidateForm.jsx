@@ -5,8 +5,10 @@ import {
   getCandidate,
   updateCandidate,
   uploadResume,
+  uploadCandidateImage,
 } from '../services/candidateService';
 import { getJobs } from '../services/jobService';
+import { getResumeUrl } from '../utils/urlHelper';
 
 const initialFormState = {
   firstName: '',
@@ -25,6 +27,8 @@ const initialFormState = {
   education: '',
   resumeUrl: '',
   resumeFilename: '',
+  imageUrl: '',
+  imageFilename: '',
 };
 
 const CandidateForm = () => {
@@ -77,6 +81,8 @@ const CandidateForm = () => {
           education: candidate.education || '',
           resumeUrl: candidate.resumeUrl || '',
           resumeFilename: candidate.resumeFilename || '',
+          imageUrl: candidate.imageUrl || '',
+          imageFilename: candidate.imageFilename || '',
         });
       } catch (err) {
         setError(err.response?.data?.message || 'Unable to load candidate data');
@@ -123,7 +129,7 @@ const CandidateForm = () => {
 
     try {
       const response = await uploadResume(formData);
-      const { parsed, resumeUrl, resumeFilename, extractedEducation } = response.data.data;
+      const { parsed, resumeUrl, resumeFilename } = response.data.data;
       setForm((prev) => ({
         ...prev,
         ...parsed,
@@ -133,6 +139,32 @@ const CandidateForm = () => {
       setSuccess('Resume parsed successfully. Please review and save.');
     } catch (err) {
       setError(err.response?.data?.message || 'Resume upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    setUploading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await uploadCandidateImage(formData);
+      const { imageUrl, imageFilename } = response.data.data;
+      setForm((prev) => ({
+        ...prev,
+        imageUrl,
+        imageFilename,
+      }));
+      setSuccess('Candidate image uploaded successfully.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Candidate image upload failed');
     } finally {
       setUploading(false);
     }
@@ -201,13 +233,22 @@ const CandidateForm = () => {
                   <h5 className="card-title mb-2">Candidate details</h5>
                   <p className="text-muted mb-0">Organize the candidate profile with clean sections and easy-to-read fields.</p>
                 </div>
-                <div className="d-flex flex-wrap gap-2">
+                <div className="d-flex flex-wrap gap-2 align-items-center">
                   <label className="btn btn-outline-primary mb-0">
                     Upload Resume
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx"
                       onChange={handleResumeUpload}
+                      hidden
+                    />
+                  </label>
+                  <label className="btn btn-outline-info mb-0">
+                    Upload Image
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      onChange={handleImageUpload}
                       hidden
                     />
                   </label>
@@ -418,9 +459,18 @@ const CandidateForm = () => {
             <div className="card-body">
               <h6 className="card-title">Preview</h6>
               <div className="d-flex align-items-center gap-3 mb-3">
-                <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style={{ width: 56, height: 56 }}>
-                  <span className="fs-5 fw-bold">{(form.firstName?.[0] || 'C') + (form.lastName?.[0] || '')}</span>
-                </div>
+                {form.imageUrl ? (
+                  <img
+                    src={getResumeUrl(form.imageUrl)}
+                    alt="Candidate"
+                    className="rounded-circle border"
+                    style={{ width: 56, height: 56, objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style={{ width: 56, height: 56 }}>
+                    <span className="fs-5 fw-bold">{(form.firstName?.[0] || 'C') + (form.lastName?.[0] || '')}</span>
+                  </div>
+                )}
                 <div>
                   <div className="fw-semibold">{form.firstName || 'First'} {form.lastName || 'Last'}</div>
                   <div className="text-muted small">{form.currentDesignation || 'Candidate Title'}</div>

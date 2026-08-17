@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getCandidates, deleteCandidate } from '../services/candidateService';
 import Layout from '../components/Layout';
+import { getResumeUrl } from '../utils/urlHelper';
 
 const CandidatesList = () => {
   const [candidates, setCandidates] = useState([]);
@@ -151,11 +152,25 @@ const CandidatesList = () => {
                   {candidates.map((candidate) => (
                     <tr key={candidate._id} className="align-middle">
                       <td className="align-middle">
-                        <Link to={`/candidates/${candidate._id}`} className="text-decoration-none fw-semibold">
-                          {candidate.firstName} {candidate.lastName}
-                        </Link>
-                        <div className="small text-muted">
-                          {candidate.source || 'Unknown source'} · {candidate.experience || 'Experience N/A'}
+                        <div className="d-flex align-items-center gap-3">
+                          {candidate.imageUrl ? (
+                            <img
+                              src={getResumeUrl(candidate.imageUrl)}
+                              alt={`${candidate.firstName} ${candidate.lastName}`}
+                              className="rounded-circle border"
+                              style={{ width: 32, height: 32, objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div
+                              className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                              style={{ width: 32, height: 32, fontSize: '0.75rem', fontWeight: 600 }}
+                            >
+                              {(candidate.firstName?.[0] || 'C') + (candidate.lastName?.[0] || '')}
+                            </div>
+                          )}
+                          <Link to={`/candidates/${candidate._id}`} className="text-decoration-none fw-semibold">
+                            {candidate.firstName} {candidate.lastName}
+                          </Link>
                         </div>
                       </td>
                       <td className="align-middle">

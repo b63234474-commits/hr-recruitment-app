@@ -252,6 +252,23 @@ const parseResumeText = (text) => {
   return result;
 };
 
+export const uploadCandidateImage = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new ApiError(400, 'Candidate image is required');
+  }
+
+  const { filename } = req.file;
+
+  res.status(200).json({
+    success: true,
+    message: 'Candidate image uploaded successfully',
+    data: {
+      imageUrl: `/uploads/${filename}`,
+      imageFilename: filename,
+    },
+  });
+});
+
 export const uploadResume = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new ApiError(400, 'Resume file is required');
@@ -309,6 +326,8 @@ export const createCandidate = asyncHandler(async (req, res) => {
     partner,
     resumeUrl,
     resumeFilename,
+    imageUrl,
+    imageFilename,
   } = req.body;
 
   if (!firstName || !lastName) {
@@ -342,6 +361,8 @@ export const createCandidate = asyncHandler(async (req, res) => {
     referredEmployeeName,
     resumeUrl,
     resumeFilename,
+    imageUrl,
+    imageFilename,
   };
 
   const match = await buildCandidateMatch(candidateData);
@@ -513,6 +534,8 @@ export const updateCandidate = asyncHandler(async (req, res) => {
     partner,
     resumeUrl,
     resumeFilename,
+    imageUrl,
+    imageFilename,
   } = req.body;
 
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -542,6 +565,8 @@ export const updateCandidate = asyncHandler(async (req, res) => {
   candidate.appliedJob = await resolveJobReference(appliedJob) || candidate.appliedJob;
   candidate.resumeUrl = resumeUrl ?? candidate.resumeUrl;
   candidate.resumeFilename = resumeFilename ?? candidate.resumeFilename;
+  candidate.imageUrl = imageUrl ?? candidate.imageUrl;
+  candidate.imageFilename = imageFilename ?? candidate.imageFilename;
   candidate.partner = await resolvePartnerReference(partner) || candidate.partner;
 
   const match = await buildCandidateMatch(candidate);
