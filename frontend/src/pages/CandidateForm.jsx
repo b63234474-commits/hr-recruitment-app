@@ -211,14 +211,6 @@ const CandidateForm = () => {
               : 'Upload a resume or enter candidate details manually.'}
           </p>
         </div>
-        <div className="d-flex flex-wrap gap-2">
-          <button type="button" className="btn btn-success" onClick={() => navigate('/candidates')}>
-            OK
-          </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/candidates')}>
-            Cancel
-          </button>
-        </div>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}

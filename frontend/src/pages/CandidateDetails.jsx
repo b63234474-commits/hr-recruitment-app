@@ -59,14 +59,23 @@ const CandidateDetails = () => {
     <div className="container-fluid px-4 py-4">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
         <div className="d-flex align-items-center gap-3">
-          <div
-            className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-            style={{ width: 72, height: 72 }}
-          >
-            <span className="fs-3 fw-bold">
-              {candidate.firstName?.[0] || 'C'}{candidate.lastName?.[0] || ''}
-            </span>
-          </div>
+          {candidate.imageUrl ? (
+            <img
+              src={getResumeUrl(candidate.imageUrl)}
+              alt={`${candidate.firstName} ${candidate.lastName}`}
+              className="rounded-circle border"
+              style={{ width: 72, height: 72, objectFit: 'cover' }}
+            />
+          ) : (
+            <div
+              className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+              style={{ width: 72, height: 72 }}
+            >
+              <span className="fs-3 fw-bold">
+                {candidate.firstName?.[0] || 'C'}{candidate.lastName?.[0] || ''}
+              </span>
+            </div>
+          )}
           <div>
             <h3 className="mb-1">{candidate.firstName} {candidate.lastName}</h3>
             <p className="text-muted mb-2">{candidate.currentDesignation || 'Candidate profile'}</p>
