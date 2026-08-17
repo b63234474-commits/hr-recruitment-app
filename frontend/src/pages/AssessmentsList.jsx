@@ -41,7 +41,7 @@ const AssessmentsList = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3 className="mb-1">Assessments</h3>
-          <p className="text-muted mb-0">Manage candidate assessments and scoring.</p>
+          
         </div>
         <Link to="/assessments/create" className="btn btn-primary">
           <i className="bi bi-plus-lg me-2"></i>

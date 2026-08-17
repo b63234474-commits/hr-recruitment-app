@@ -100,7 +100,7 @@ const CandidatesList = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h3 className="mb-1">Candidates</h3>
-            <p className="text-muted mb-0">Manage applicants and resumes.</p>
+           
           </div>
           <Link to="/candidates/create" className="btn btn-primary">
             <i className="bi bi-plus-lg me-2"></i>

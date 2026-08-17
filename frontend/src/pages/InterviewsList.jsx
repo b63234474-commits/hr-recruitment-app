@@ -53,7 +53,7 @@ const InterviewsList = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3 className="mb-1">Interviews</h3>
-          <p className="text-muted mb-0">Track interview scheduling, feedback and status.</p>
+         
         </div>
         <Link to="/interviews/create" className="btn btn-primary">
           <i className="bi bi-plus-lg me-2"></i>

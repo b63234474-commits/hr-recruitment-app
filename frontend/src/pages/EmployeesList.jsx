@@ -66,7 +66,7 @@ const EmployeesList = () => {
       <div className="d-flex justify-content-between align-items-center mb-4 gap-3 flex-column flex-md-row">
         <div>
           <h3 className="mb-1">Employees</h3>
-          <p className="text-muted mb-0">Track employees and onboarding progress.</p>
+         
         </div>
         <Link to="/employees/create" className="btn btn-primary">
           <i className="bi bi-plus-lg me-2"></i>

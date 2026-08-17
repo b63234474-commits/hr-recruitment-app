@@ -92,7 +92,7 @@ const PipelineBoard = () => {
         <div>
           <h3 className="mb-1">Recruitment Pipeline</h3>
           <p className="text-muted mb-0">
-            Drag candidates through stages. HR and Admin may move candidates between pipeline stages.
+            Drag candidates through stages
           </p>
         </div>
       </div>

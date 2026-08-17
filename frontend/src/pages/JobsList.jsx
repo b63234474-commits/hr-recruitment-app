@@ -124,7 +124,7 @@ const JobsList = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h3 className="mb-1">Job Management</h3>
-            <p className="text-muted mb-0">Manage open hiring roles and job lifecycle.</p>
+          
           </div>
           <Link to="/jobs/create" className="btn btn-primary">
             <i className="bi bi-plus-lg me-2"></i>

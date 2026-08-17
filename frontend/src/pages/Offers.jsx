@@ -53,7 +53,7 @@ const Offers = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3 className="mb-1">Offer Management</h3>
-          <p className="text-muted mb-0">Create, send, and track offer letters.</p>
+          
         </div>
         <Link to="/offers/create" className="btn btn-primary">
           <i className="bi bi-plus-lg me-2" />Create Offer

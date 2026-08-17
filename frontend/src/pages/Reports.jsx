@@ -71,7 +71,7 @@ const Reports = () => {
         <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
           <div>
             <h3 className="mb-1">Reports</h3>
-            <p className="text-muted mb-0">Recruitment reports filtered by date, job, department, recruiter, and source.</p>
+            
           </div>
           <button className="btn btn-outline-secondary" onClick={exportCsv} disabled={!reportData}>
             <i className="bi bi-file-earmark-spreadsheet me-2"></i>

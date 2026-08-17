@@ -60,7 +60,7 @@ const Dashboard = () => {
         <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
           <div>
             <h3 className="mb-1">Dashboard</h3>
-            <p className="text-muted mb-0">A focused view of essential hiring metrics.</p>
+           
           </div>
         </div>
       </div>
