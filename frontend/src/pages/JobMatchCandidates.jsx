@@ -414,8 +414,8 @@ const JobMatchCandidates = () => {
                     <div className="card text-center">
                       <div className="card-body">
                         <small className="text-muted text-uppercase">Skills Match</small>
-                        <div className={`h4 mb-0 text-${getScoreColor(candidateMatchDetails.match.skillMatchScore || 0)}`}>
-                          {candidateMatchDetails.match.skillMatchScore || candidateMatchDetails.match.overallMatchScore || 0}%
+                        <div className={`h4 mb-0 text-${getScoreColor(candidateMatchDetails.match.skillMatchPercentage ?? candidateMatchDetails.match.skillMatchScore ?? 0)}`}>
+                          {candidateMatchDetails.match.skillMatchPercentage ?? candidateMatchDetails.match.skillMatchScore ?? candidateMatchDetails.match.overallMatchScore ?? 0}%
                         </div>
                       </div>
                     </div>

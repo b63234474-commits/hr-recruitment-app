@@ -22,9 +22,9 @@ const extractYearsFromExperience = (expString) => {
  * Weighs required vs preferred skills
  */
 const calculateSkillMatch = (candidateSkills, requiredSkills, preferredSkills) => {
-  const candidateSet = new Set((candidateSkills || []).map(s => s.toLowerCase().trim()));
-  const requiredSet = new Set((requiredSkills || []).map(s => s.toLowerCase().trim()));
-  const preferredSet = new Set((preferredSkills || []).map(s => s.toLowerCase().trim()));
+  const candidateSet = new Set((candidateSkills || []).map((s) => s.toLowerCase().trim()).filter(Boolean));
+  const requiredSet = new Set((requiredSkills || []).map((s) => s.toLowerCase().trim()).filter(Boolean));
+  const preferredSet = new Set((preferredSkills || []).map((s) => s.toLowerCase().trim()).filter(Boolean));
 
   let matchedRequired = 0;
   let matchedPreferred = 0;
@@ -32,7 +32,7 @@ const calculateSkillMatch = (candidateSkills, requiredSkills, preferredSkills) =
   const matchedPreferredList = [];
   const missingRequiredList = [];
 
-  // Check required skills
+  // Required JD skills are the denominator for ATS skill match.
   for (const skill of requiredSet) {
     if (candidateSet.has(skill)) {
       matchedRequired++;
@@ -42,7 +42,7 @@ const calculateSkillMatch = (candidateSkills, requiredSkills, preferredSkills) =
     }
   }
 
-  // Check preferred skills
+  // Preferred skills are tracked separately and do not reduce skill percentage.
   for (const skill of preferredSet) {
     if (candidateSet.has(skill)) {
       matchedPreferred++;
@@ -50,23 +50,26 @@ const calculateSkillMatch = (candidateSkills, requiredSkills, preferredSkills) =
     }
   }
 
-  // Calculate percentages
-  const requiredScore = requiredSet.size > 0 ? (matchedRequired / requiredSet.size) * 100 : 100;
-  const preferredScore = preferredSet.size > 0 ? (matchedPreferred / preferredSet.size) * 100 : 0;
+  const totalRequired = requiredSet.size;
+  const totalPreferred = preferredSet.size;
 
-  // Weight: 75% required, 25% preferred
-  const skillScore = (requiredScore * 0.75) + (preferredScore * 0.25);
+  const requiredScore = totalRequired > 0 ? (matchedRequired / totalRequired) * 100 : 100;
+  const preferredScore = totalPreferred > 0 ? (matchedPreferred / totalPreferred) * 100 : 0;
+
+  // Skill match percentage is always based on required JD skills only.
+  const skillScore = Math.round(requiredScore);
 
   return {
-    score: Math.round(skillScore),
+    score: skillScore,
     requiredScore: Math.round(requiredScore),
     preferredScore: Math.round(preferredScore),
     matchedRequired: matchedRequiredList,
     matchedPreferred: matchedPreferredList,
     missingRequired: missingRequiredList,
     matchedCount: matchedRequired + matchedPreferred,
-    totalRequired: requiredSet.size,
-    totalPreferred: preferredSet.size,
+    totalRequired,
+    totalPreferred,
+    skillMatchPercentage: Math.round(requiredScore),
   };
 };
 
@@ -285,13 +288,22 @@ export const calculateMatchScore = (candidate, job) => {
     throw new Error('Candidate and job data are required');
   }
 
-  // Extract skills from resume (candidate model already has skills array from parsed resume)
-  const candidateSkills = candidate.extractedSkills || candidate.skills || [];
+  const resumeSkills = Array.isArray(candidate.extractedSkills) && candidate.extractedSkills.length > 0
+    ? candidate.extractedSkills
+    : Array.isArray(candidate.skills) && candidate.skills.length > 0
+      ? candidate.skills
+      : [];
+
+  const candidateSkills = resumeSkills;
   
   // Extract skills from job description
   const jdAnalysis = extractSkillsFromJD(job.jobDescription || '');
-  const jobRequiredSkills = job.requiredSkills || jdAnalysis.requiredSkills;
-  const jobPreferredSkills = job.preferredSkills || jdAnalysis.preferredSkills;
+  const jobRequiredSkills = (Array.isArray(job.requiredSkills) && job.requiredSkills.length > 0)
+    ? job.requiredSkills
+    : jdAnalysis.requiredSkills;
+  const jobPreferredSkills = (Array.isArray(job.preferredSkills) && job.preferredSkills.length > 0)
+    ? job.preferredSkills
+    : jdAnalysis.preferredSkills;
 
   // Calculate individual match scores
   const skillMatch = calculateSkillMatch(candidateSkills, jobRequiredSkills, jobPreferredSkills);
@@ -327,11 +339,8 @@ export const calculateMatchScore = (candidate, job) => {
   else if (overallMatchScore >= 65) suitability = 'Suitable';
   else if (overallMatchScore >= 40) suitability = 'Review Required';
 
-  // Combine all matched skills for comprehensive display
-  const allMatchedSkills = Array.from(new Set([
-    ...skillMatch.matchedRequired,
-    ...skillMatch.matchedPreferred
-  ]));
+  // Only JD-required skills are counted as matched skills for ATS evaluation.
+  const allMatchedSkills = Array.from(new Set(skillMatch.matchedRequired));
   
   // Build matching reasons
   const matchingReasons = [];
@@ -371,6 +380,7 @@ export const calculateMatchScore = (candidate, job) => {
   return {
     overallMatchScore,
     skillMatchScore: skillMatch.score,
+    skillMatchPercentage: skillMatch.skillMatchPercentage,
     experienceMatchScore: experienceMatch.score,
     designationMatchScore: designationMatch.score,
     educationMatchScore: educationMatch.score,

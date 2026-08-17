@@ -150,20 +150,26 @@ export const getCandidateMatch = asyncHandler(async (req, res) => {
   });
 
   // Auto-extract skills from job description if not already extracted
-  let jobSkills = job.requiredSkills || [];
+  let jobSkills = Array.isArray(job.requiredSkills) && job.requiredSkills.length > 0 ? job.requiredSkills : [];
   if (jobSkills.length === 0 && job.jobDescription) {
     console.log('Auto-extracting skills from job description for job:', job._id);
     const extracted = extractSkillsFromJD(job.jobDescription);
-    jobSkills = extracted.requiredSkills || [];
+    jobSkills = Array.isArray(extracted.requiredSkills) && extracted.requiredSkills.length > 0 ? extracted.requiredSkills : [];
     // Also update the job in database for future use
     await Job.findByIdAndUpdate(job._id, { requiredSkills: jobSkills });
   }
+
+  const resumeSkills = Array.isArray(candidate.extractedSkills) && candidate.extractedSkills.length > 0
+    ? candidate.extractedSkills
+    : Array.isArray(candidate.skills) && candidate.skills.length > 0
+      ? candidate.skills
+      : [];
 
   // Enhance response with detailed skill information
   const enhancedMatch = {
     ...match,
     jobSkills,
-    resumeSkills: candidate.extractedSkills || candidate.skills || [],
+    resumeSkills,
   };
 
   res.status(200).json({
@@ -240,9 +246,23 @@ export const saveCandidateMatch = asyncHandler(async (req, res) => {
       explanation: match.explanation,
       matchingReasons: match.matchingReasons || [],
       missingReasons: match.missingReasons || [],
-      candidateSkillsExtracted: match.candidateSkillsExtracted || candidate.extractedSkills || candidate.skills || [],
-      jobRequiredSkills: match.jobRequiredSkills || job.requiredSkills || [],
-      jobPreferredSkills: match.jobPreferredSkills || job.preferredSkills || [],
+      candidateSkillsExtracted: Array.isArray(match.candidateSkillsExtracted) && match.candidateSkillsExtracted.length > 0
+        ? match.candidateSkillsExtracted
+        : Array.isArray(candidate.extractedSkills) && candidate.extractedSkills.length > 0
+          ? candidate.extractedSkills
+          : Array.isArray(candidate.skills) && candidate.skills.length > 0
+            ? candidate.skills
+            : [],
+      jobRequiredSkills: Array.isArray(match.jobRequiredSkills) && match.jobRequiredSkills.length > 0
+        ? match.jobRequiredSkills
+        : Array.isArray(job.requiredSkills) && job.requiredSkills.length > 0
+          ? job.requiredSkills
+          : [],
+      jobPreferredSkills: Array.isArray(match.jobPreferredSkills) && match.jobPreferredSkills.length > 0
+        ? match.jobPreferredSkills
+        : Array.isArray(job.preferredSkills) && job.preferredSkills.length > 0
+          ? job.preferredSkills
+          : [],
       scoringWeights: match.scoringWeights || {},
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
