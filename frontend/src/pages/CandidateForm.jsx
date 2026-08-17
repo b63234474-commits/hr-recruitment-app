@@ -23,10 +23,6 @@ const initialFormState = {
   partner: '',
   partnerName: '',
   education: '',
-  skills: [],
-  extractedSkills: [],
-  certifications: [],
-  projects: [],
   resumeUrl: '',
   resumeFilename: '',
 };
@@ -79,10 +75,6 @@ const CandidateForm = () => {
           partner: candidate.partner?._id || '',
           partnerName: candidate.partner?.companyName || '',
           education: candidate.education || '',
-          skills: candidate.skills || [],
-          extractedSkills: candidate.extractedSkills || [],
-          certifications: candidate.certifications || [],
-          projects: candidate.projects || [],
           resumeUrl: candidate.resumeUrl || '',
           resumeFilename: candidate.resumeFilename || '',
         });
@@ -131,14 +123,12 @@ const CandidateForm = () => {
 
     try {
       const response = await uploadResume(formData);
-      const { parsed, resumeUrl, resumeFilename, extractedSkills, extractedEducation } = response.data.data;
+      const { parsed, resumeUrl, resumeFilename, extractedEducation } = response.data.data;
       setForm((prev) => ({
         ...prev,
         ...parsed,
         resumeUrl,
         resumeFilename,
-        extractedSkills: extractedSkills || [],
-        extractedEducation: extractedEducation || '',
       }));
       setSuccess('Resume parsed successfully. Please review and save.');
     } catch (err) {
@@ -404,7 +394,7 @@ const CandidateForm = () => {
 
           <div className="card shadow-sm mb-4">
             <div className="card-body">
-              <h6 className="text-uppercase text-muted mb-3">Education & Skills</h6>
+              <h6 className="text-uppercase text-muted mb-3">Education</h6>
               <div className="row g-3">
                 <div className="col-12">
                   <label className="form-label">Education</label>
@@ -416,36 +406,6 @@ const CandidateForm = () => {
                     onChange={handleChange}
                     placeholder="e.g., Bachelor of Science in Computer Science"
                   />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">
-                    <i className="bi bi-robot me-1"></i>
-                    Extracted Skills from Resume
-                  </label>
-                  <div className="d-flex flex-wrap gap-2 p-3 bg-light rounded">
-                    {form.extractedSkills && form.extractedSkills.length > 0 ? (
-                      form.extractedSkills.map((skill, idx) => (
-                        <span key={idx} className="badge bg-primary">{skill}</span>
-                      ))
-                    ) : (
-                      <span className="text-muted small">Upload a resume to extract skills automatically</span>
-                    )}
-                  </div>
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Additional Skills (Comma-separated)</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="skills"
-                    value={Array.isArray(form.skills) ? form.skills.join(', ') : form.skills}
-                    onChange={(e) => setForm((prev) => ({
-                      ...prev,
-                      skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean),
-                    }))}
-                    placeholder="e.g., JavaScript, React, Node.js"
-                  />
-                  <small className="text-muted">Manually enter skills not captured from the resume</small>
                 </div>
               </div>
             </div>
@@ -476,21 +436,8 @@ const CandidateForm = () => {
               <p className="mb-2"><strong>Applied Job:</strong> {form.appliedJob || '-'}</p>
               <p className="mb-2"><strong>Resume:</strong> {form.resumeFilename || 'Not uploaded'}</p>
               <hr />
-              <div className="small text-uppercase text-muted mb-2">Education & Skills</div>
+              <div className="small text-uppercase text-muted mb-2">Education</div>
               <p className="mb-2"><strong>Education:</strong> {form.education || '-'}</p>
-              {form.extractedSkills && form.extractedSkills.length > 0 && (
-                <>
-                  <p className="mb-1"><strong>Extracted Skills:</strong></p>
-                  <div className="d-flex flex-wrap gap-1 mb-2">
-                    {form.extractedSkills.slice(0, 5).map((skill, idx) => (
-                      <span key={idx} className="badge bg-success small">{skill}</span>
-                    ))}
-                    {form.extractedSkills.length > 5 && (
-                      <span className="badge bg-secondary small">+{form.extractedSkills.length - 5}</span>
-                    )}
-                  </div>
-                </>
-              )}
             </div>
           </div>
 

@@ -62,35 +62,11 @@ const candidateSchema = new mongoose.Schema(
       trim: true,
       maxlength: [150, 'Referral employee name cannot exceed 150 characters'],
     },
-    skills: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
-    extractedSkills: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
     education: {
       type: String,
       trim: true,
       maxlength: [500, 'Education cannot exceed 500 characters'],
     },
-    certifications: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
-    projects: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
     source: {
       type: String,
       enum: CANDIDATE_SOURCES,

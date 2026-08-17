@@ -196,14 +196,11 @@ const parseResumeText = (text) => {
     lastName: '',
     email: '',
     phone: '',
-    skills: [],
     education: '',
     experience: '',
     currentCompany: '',
     currentDesignation: '',
     location: '',
-    certifications: [],
-    projects: [],
   };
 
   const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
@@ -238,21 +235,6 @@ const parseResumeText = (text) => {
 
     if (!result.education && /education[:\-]/i.test(line)) {
       result.education = line.split(/[:\-]/)[1]?.trim() || '';
-    }
-
-    if (/skills?[:\-]/i.test(line)) {
-      const skillsText = line.split(/[:\-]/).slice(1).join('-').trim();
-      result.skills = skillsText.split(/,|;/).map((item) => item.toLowerCase().trim()).filter(Boolean);
-    }
-
-    if (/certifications?[:\-]/i.test(line)) {
-      const certificationText = line.split(/[:\-]/).slice(1).join('-').trim();
-      result.certifications = certificationText.split(/,|;/).map((item) => item.trim()).filter(Boolean);
-    }
-
-    if (/projects?[:\-]/i.test(line)) {
-      const projectText = line.split(/[:\-]/).slice(1).join('-').trim();
-      result.projects = projectText.split(/,|;/).map((item) => item.trim()).filter(Boolean);
     }
 
     if (!result.experience && /years? of experience/i.test(line)) {
@@ -291,11 +273,6 @@ export const uploadResume = asyncHandler(async (req, res) => {
 
   const parsed = parseResumeText(text);
 
-  // Extract skills automatically from resume text
-  const extractedSkills = extractSkillsFromText(text);
-  console.log('Resume extracted skills:', extractedSkills);
-  parsed.extractedSkills = extractedSkills;
-
   // Extract education automatically from resume text
   const extractedEducation = extractEducationFromText(text);
   console.log('Resume extracted education:', extractedEducation);
@@ -310,7 +287,6 @@ export const uploadResume = asyncHandler(async (req, res) => {
       parsed,
       resumeUrl: `/uploads/${filename}`,
       resumeFilename: filename,
-      extractedSkills,
       extractedEducation,
     },
   });
@@ -327,11 +303,7 @@ export const createCandidate = asyncHandler(async (req, res) => {
     currentCompany,
     currentDesignation,
     referredEmployeeName,
-    skills,
-    extractedSkills,
     education,
-    certifications,
-    projects,
     source,
     appliedJob,
     partner,
@@ -360,27 +332,7 @@ export const createCandidate = asyncHandler(async (req, res) => {
     experience,
     currentCompany,
     currentDesignation,
-    skills: Array.isArray(skills)
-      ? skills.map(s => s.toLowerCase().trim()).filter(Boolean)
-      : skills
-      ? skills.split(',').map((item) => item.toLowerCase().trim()).filter(Boolean)
-      : [],
-    extractedSkills: Array.isArray(extractedSkills)
-      ? extractedSkills.map(s => s.toLowerCase().trim()).filter(Boolean)
-      : extractedSkills
-      ? extractedSkills.split(',').map((item) => item.toLowerCase().trim()).filter(Boolean)
-      : [],
     education,
-    certifications: Array.isArray(certifications)
-      ? certifications
-      : certifications
-      ? certifications.split(',').map((item) => item.trim()).filter(Boolean)
-      : [],
-    projects: Array.isArray(projects)
-      ? projects
-      : projects
-      ? projects.split(',').map((item) => item.trim()).filter(Boolean)
-      : [],
     source: CANDIDATE_SOURCES.includes(source) ? source : 'Other',
     status: PIPELINE_STATUSES.includes(req.body.status)
       ? req.body.status
@@ -555,11 +507,7 @@ export const updateCandidate = asyncHandler(async (req, res) => {
     currentCompany,
     currentDesignation,
     referredEmployeeName,
-    skills,
-    extractedSkills,
     education,
-    certifications,
-    projects,
     source,
     appliedJob,
     partner,
@@ -584,27 +532,7 @@ export const updateCandidate = asyncHandler(async (req, res) => {
   candidate.currentCompany = currentCompany ?? candidate.currentCompany;
   candidate.currentDesignation = currentDesignation ?? candidate.currentDesignation;
   candidate.referredEmployeeName = referredEmployeeName ?? candidate.referredEmployeeName;
-  candidate.skills = Array.isArray(skills)
-    ? skills.map(s => s.toLowerCase().trim()).filter(Boolean)
-    : skills
-    ? skills.split(',').map((item) => item.toLowerCase().trim()).filter(Boolean)
-    : candidate.skills;
-  candidate.extractedSkills = Array.isArray(extractedSkills)
-    ? extractedSkills.map(s => s.toLowerCase().trim()).filter(Boolean)
-    : extractedSkills
-    ? extractedSkills.split(',').map((item) => item.toLowerCase().trim()).filter(Boolean)
-    : candidate.extractedSkills;
   candidate.education = education ?? candidate.education;
-  candidate.certifications = Array.isArray(certifications)
-    ? certifications
-    : certifications
-    ? certifications.split(',').map((item) => item.trim()).filter(Boolean)
-    : candidate.certifications;
-  candidate.projects = Array.isArray(projects)
-    ? projects
-    : projects
-    ? projects.split(',').map((item) => item.trim()).filter(Boolean)
-    : candidate.projects;
   candidate.source = CANDIDATE_SOURCES.includes(source)
     ? source
     : candidate.source;
