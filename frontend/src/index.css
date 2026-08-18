@@ -170,6 +170,33 @@ body {
   }
 }
 
+.settings-shell {
+  height: calc(100vh - 160px);
+  min-height: 500px;
+  margin: 0;
+}
+
+.settings-sidebar-card,
+.settings-content-card {
+  height: 100%;
+}
+
+.settings-sidebar-scroll,
+.settings-content-scroll {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 110, 253, 0.45) transparent;
+}
+
+.settings-sidebar-scroll {
+  max-height: calc(100vh - 220px);
+}
+
+.settings-content-scroll {
+  max-height: calc(100vh - 220px);
+}
+
 main {
   min-width: 0;
   overflow-y: auto;

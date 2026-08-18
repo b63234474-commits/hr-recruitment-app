@@ -386,14 +386,23 @@ const CandidateForm = () => {
                 </div>
                 <div className="col-md-4">
                   <label className="form-label">Source</label>
-                  <input
-                    type="text"
-                    className="form-control"
+                  <select
+                    className="form-select"
                     name="source"
                     value={form.source}
                     onChange={handleChange}
-                    placeholder="LinkedIn, Referral, etc."
-                  />
+                  >
+                    <option value="">Select source</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Indeed">Indeed</option>
+                    <option value="Naukri">Naukri</option>
+                    <option value="Referral">Referral</option>
+                    <option value="Company Website">Company Website</option>
+                    <option value="Email">Email</option>
+                    <option value="Recruiter Sourcing">Recruiter Sourcing</option>
+                    <option value="Walk-in">Walk-in</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">Applied Job</label>

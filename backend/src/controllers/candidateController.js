@@ -9,6 +9,7 @@ import Partner from '../models/Partner.js';
 import ActivityLog from '../models/ActivityLog.js';
 import { PIPELINE_STATUSES } from '../config/pipelineStatuses.js';
 import { extractSkillsFromText, extractEducationFromText } from '../utils/skillExtractor.js';
+import { createActivity } from '../utils/activityService.js';
 
 const resolveJobReference = async (appliedJob) => {
   if (!appliedJob) {
@@ -373,6 +374,19 @@ export const createCandidate = asyncHandler(async (req, res) => {
     matchDetails: match.details,
   });
 
+  // Log activity for candidate creation
+  await createActivity({
+    candidateId: candidate._id,
+    type: 'CANDIDATE_CREATED',
+    title: 'Candidate Created',
+    description: `Candidate ${candidate.firstName} ${candidate.lastName} has been created.`,
+    performedBy: req.user?._id,
+    metadata: {
+      source: candidate.source,
+      appliedJob: candidate.appliedJob,
+    },
+  });
+
   res.status(201).json({
     success: true,
     message: 'Candidate created successfully',
@@ -646,6 +660,20 @@ export const updateCandidateStatus = asyncHandler(async (req, res) => {
 
   candidate.activityLogs.push(activityLog._id);
   await candidate.save();
+
+  // Also create a CandidateActivity for timeline
+  await createActivity({
+    candidateId: candidate._id,
+    type: 'STATUS_CHANGED',
+    title: `Status Changed: ${previousStatus} → ${status}`,
+    description: `Candidate status changed from ${previousStatus} to ${status}.${note ? ` Note: ${note}` : ''}`,
+    performedBy: req.user._id,
+    metadata: {
+      previousStatus,
+      newStatus: status,
+      note,
+    },
+  });
 
   res.status(200).json({
     success: true,

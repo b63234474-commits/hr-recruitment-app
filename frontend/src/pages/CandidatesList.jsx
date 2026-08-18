@@ -12,6 +12,7 @@ const CandidatesList = () => {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
   const [partnerFilter, setPartnerFilter] = useState('');
   const [sortBy, setSortBy] = useState('newest');
 
@@ -32,15 +33,18 @@ const CandidatesList = () => {
     const params = new URLSearchParams(location.search);
     const nextSearch = params.get('search') || '';
     const nextStatus = params.get('status') || '';
+    const nextSource = params.get('source') || '';
     const nextPartner = params.get('partner') || '';
 
     setSearch(nextSearch);
     setStatusFilter(nextStatus);
+    setSourceFilter(nextSource);
     setPartnerFilter(nextPartner);
 
     loadCandidates({
       search: nextSearch,
       status: nextStatus,
+      source: nextSource,
       partner: nextPartner,
     });
   }, [location.search]);
@@ -65,12 +69,14 @@ const CandidatesList = () => {
     const params = new URLSearchParams({
       search,
       status: statusFilter,
+      source: sourceFilter,
       partner: partnerFilter,
     });
     navigate(`/candidates?${params.toString()}`);
     await loadCandidates({
       search,
       status: statusFilter,
+      source: sourceFilter,
       partner: partnerFilter,
     });
   };
@@ -78,6 +84,7 @@ const CandidatesList = () => {
   const resetFilters = async () => {
     setSearch('');
     setStatusFilter('');
+    setSourceFilter('');
     setPartnerFilter('');
     setSortBy('newest');
     navigate('/candidates');
@@ -121,17 +128,26 @@ const CandidatesList = () => {
                   placeholder="Search by name, email, or job"
                 />
               </div>
-              <div className="col-md-4">
-                <label className="form-label">Partner Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={partnerFilter}
-                  onChange={(e) => setPartnerFilter(e.target.value)}
-                  placeholder="Filter by partner"
-                />
+              <div className="col-md-3">
+                <label className="form-label">Source</label>
+                <select
+                  className="form-select"
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                >
+                  <option value="">All sources</option>
+                  <option value="LinkedIn">LinkedIn</option>
+                  <option value="Indeed">Indeed</option>
+                  <option value="Naukri">Naukri</option>
+                  <option value="Referral">Referral</option>
+                  <option value="Company Website">Company Website</option>
+                  <option value="Email">Email</option>
+                  <option value="Recruiter Sourcing">Recruiter Sourcing</option>
+                  <option value="Walk-in">Walk-in</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <label className="form-label">Status</label>
                 <select
                   className="form-select"
@@ -153,17 +169,15 @@ const CandidatesList = () => {
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>
-              <div className="col-md-4">
-                <label className="form-label">Sort</label>
-                <select
-                  className="form-select"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  <option value="newest">Newest</option>
-                  <option value="name-asc">Name A–Z</option>
-                  <option value="match-desc">Highest Match</option>
-                </select>
+              <div className="col-md-2">
+                <label className="form-label">Partner</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={partnerFilter}
+                  onChange={(e) => setPartnerFilter(e.target.value)}
+                  placeholder="Filter by partner"
+                />
               </div>
               <div className="col-md-12 d-flex gap-2 justify-content-end">
                 <button type="submit" className="btn btn-outline-primary">
@@ -195,6 +209,7 @@ const CandidatesList = () => {
                     <th>Name</th>
                     <th>Contact</th>
                     <th>Applied Role</th>
+                    <th>Source</th>
                     <th>Status</th>
                     <th className="text-end">Actions</th>
                   </tr>
@@ -232,9 +247,27 @@ const CandidatesList = () => {
                         <div>{candidate.appliedJob?.jobId || '-'}</div>
                         <div className="small text-muted">{candidate.appliedJob?.title || candidate.appliedJob?.jobTitle || ''}</div>
                       </td>
+                      <td className="align-middle">
+                        <span className="badge bg-info text-dark">{candidate.source || 'Unknown'}</span>
+                      </td>
                       <td className="align-middle">{candidate.status || 'New'}</td>
                       <td className="text-end align-middle">
                         <div className="d-flex justify-content-end align-items-center gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary"
+                            style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
+                            onClick={() => {
+                              if (!candidate.email) {
+                                window.alert('This candidate does not have an email address.');
+                                return;
+                              }
+                              navigate(`/candidates/${candidate._id}`);
+                            }}
+                          >
+                            <i className="bi bi-envelope me-1"></i>
+                            Send Email
+                          </button>
                           <Link to={`/candidates/${candidate._id}`} className="btn btn-sm btn-outline-primary">
                             View
                           </Link>

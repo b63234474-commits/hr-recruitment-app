@@ -20,3 +20,5 @@ export const deleteCandidate = (id) => api.delete(`/candidates/${id}`);
 export const matchCandidate = (id) => api.post(`/candidates/${id}/match`);
 export const updateCandidateStatus = (id, status) => api.patch(`/candidates/${id}/status`, status);
 export const getPipelineStatuses = () => api.get('/candidates/statuses');
+export const sendCandidateEmail = (payload) => api.post('/emails/send', payload);
+export const getCandidateEmailHistory = (candidateId) => api.get(`/emails/candidate/${candidateId}`);
