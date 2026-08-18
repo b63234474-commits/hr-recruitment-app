@@ -17,6 +17,7 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 10000, // 10s - fail fast instead of hanging
   greetingTimeout: 10000,
   socketTimeout: 10000,
+  family: 4, // force IPv4 - Render's network can't reach Gmail over IPv6 (ENETUNREACH)
 });
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());

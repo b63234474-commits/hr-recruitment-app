@@ -19,6 +19,7 @@ const getTransporter = () => {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 10000,
+      family: 4, // force IPv4 - Render's network can't reach Gmail over IPv6 (ENETUNREACH)
     });
   }
 
