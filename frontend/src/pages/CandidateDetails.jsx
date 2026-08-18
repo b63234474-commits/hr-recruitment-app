@@ -207,7 +207,8 @@ const CandidateDetails = () => {
       setShowEmailModal(false);
       await loadEmailHistory();
     } catch (err) {
-      setEmailFeedback('Failed to send email. Please try again.');
+      const backendMessage = err.response?.data?.message || err.message || 'Failed to send email. Please try again.';
+      setEmailFeedback(backendMessage);
     } finally {
       setSendingEmail(false);
     }

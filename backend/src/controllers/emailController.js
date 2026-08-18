@@ -14,6 +14,9 @@ const transporter = nodemailer.createTransport({
     user: env.emailUser,
     pass: env.emailPassword,
   },
+  connectionTimeout: 10000, // 10s - fail fast instead of hanging
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());

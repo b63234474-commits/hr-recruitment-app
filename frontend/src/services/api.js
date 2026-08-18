@@ -3,6 +3,7 @@ import { getStoredToken, clearAuth } from '../utils/tokenStorage';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
+  timeout: 20000, // 20s - fail fast instead of hanging indefinitely
   headers: {
     'Content-Type': 'application/json',
   },
